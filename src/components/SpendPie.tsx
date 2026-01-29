@@ -1,33 +1,28 @@
 import React from 'react';
 
 const SpendPie: React.FC = () => {
-    // Mock data cleared - should be linked to real transactions in the future
+    // Mock data cleared
     const data: any[] = [];
 
     return (
         <div className="donut-container">
             {data.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>
-                    No hay gastos registrados para este periodo.
+                <div className="empty-state" style={{ padding: '1rem' }}>
+                    <div style={{
+                        width: '120px',
+                        height: '120px',
+                        borderRadius: '50%',
+                        border: '8px solid var(--accent-soft)',
+                        borderTopColor: 'transparent',
+                        margin: '0 auto 1.5rem',
+                        opacity: 0.5
+                    }} />
+                    <p className="empty-text">No hay gastos registrados para este periodo.</p>
                 </div>
             ) : (
-                <>
-                    <div className="donut">
-                        <div className="donut-inner-text">
-                            <p className="donut-label">Gastos de</p>
-                            <p className="donut-value">Mensual</p>
-                        </div>
-                    </div>
-
-                    <div className="legend-grid">
-                        {data.map((item, i) => (
-                            <div key={i} className="legend-item">
-                                <span className="dot" style={{ background: item.color }}></span>
-                                <span>{item.label} ({item.value})</span>
-                            </div>
-                        ))}
-                    </div>
-                </>
+                <div className="donut">
+                    {/* Real chart implementation would go here */}
+                </div>
             )}
         </div>
     );

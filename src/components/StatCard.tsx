@@ -5,18 +5,18 @@ interface StatCardProps {
     value: string;
     change?: string;
     trend?: 'up' | 'down' | 'neutral';
+    icon?: React.ReactNode;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, change, trend }) => {
+const StatCard: React.FC<StatCardProps> = ({ label, value, change, trend, icon }) => {
     return (
-        <div className="stat-card glass">
+        <div className="stat-card">
+            {icon && <div className="stat-icon">{icon}</div>}
             <span className="stat-label">{label}</span>
             <span className="stat-value">{value}</span>
-            {change && (
-                <span className={`stat-change ${trend === 'up' ? 'up' : trend === 'down' ? 'down' : ''}`}>
-                    {trend === 'up' ? '↑' : trend === 'down' ? '↓' : ''} {change}
-                </span>
-            )}
+            <span className={`stat-change ${trend || 'neutral'}`}>
+                {trend === 'up' ? '↑' : trend === 'down' ? '↓' : ''} {change || 'Sin cambios este mes'}
+            </span>
         </div>
     );
 };
