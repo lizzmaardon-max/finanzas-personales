@@ -30,7 +30,15 @@ const App: React.FC = () => {
                 .eq('user_id', MOCK_USER_ID)
                 .order('created_at', { ascending: true });
 
-            if (accountsData) setAccounts(accountsData);
+            if (accountsData) {
+                setAccounts(accountsData.map(a => ({
+                    ...a,
+                    balance: `${a.balance < 0 ? '-' : ''}$${Math.abs(parseFloat(a.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    type: a.type === 'banco' ? 'Cuenta de Ahorro' :
+                        a.type === 'credito' ? 'Tarjeta de Crédito' :
+                            a.type === 'efectivo' ? 'Efectivo' : 'Billetera Digital'
+                })));
+            }
 
             // Fetch Transactions
             const { data: transactionsData } = await supabase
@@ -112,11 +120,19 @@ const App: React.FC = () => {
     };
 
     const addAccount = async (a: any) => {
+        // Map UI type to Database Enum
+        const dbType = a.type === 'Cuenta de Ahorro' ? 'banco' :
+            a.type === 'Tarjeta de Crédito' ? 'credito' :
+                a.type === 'Efectivo' ? 'efectivo' : 'banco';
+
         const newAccount = {
             user_id: MOCK_USER_ID,
             name: a.name,
-            type: a.type.toLowerCase(), // effective mapping to enum
-            balance: parseFloat(a.balance) || 0
+            type: dbType,
+            balance: parseFloat(a.balance.replace('$', '').replace(',', '')) || 0,
+            bank: a.bank || '',
+            color: a.color || '#f9a8a8',
+            last4: a.last4 || ''
         };
 
         const { data, error } = await supabase
@@ -127,26 +143,40 @@ const App: React.FC = () => {
 
         if (error) {
             console.error('Error adding account:', error);
+            alert('Error al guardar la cuenta: ' + error.message);
             return;
         }
 
         if (data) {
-            setAccounts([...accounts, data]);
+            const adapted = {
+                ...data,
+                balance: `${data.balance < 0 ? '-' : ''}$${Math.abs(data.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                type: a.type // Keep original UI type label
+            };
+            setAccounts([...accounts, adapted]);
         }
     };
 
     const updateAccount = async (updated: any) => {
+        const dbType = updated.type === 'Cuenta de Ahorro' ? 'banco' :
+            updated.type === 'Tarjeta de Crédito' ? 'credito' :
+                updated.type === 'Efectivo' ? 'efectivo' : 'banco';
+
         const { error } = await supabase
             .from('accounts')
             .update({
                 name: updated.name,
-                type: updated.type.toLowerCase(),
-                balance: parseFloat(updated.balance)
+                type: dbType,
+                balance: parseFloat(updated.balance.replace('$', '').replace(',', '')) || 0,
+                bank: updated.bank || '',
+                color: updated.color || '#f9a8a8',
+                last4: updated.last4 || ''
             })
             .eq('id', updated.id);
 
         if (error) {
             console.error('Error updating account:', error);
+            alert('Error al actualizar la cuenta: ' + error.message);
             return;
         }
 
