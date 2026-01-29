@@ -63,7 +63,7 @@ const App: React.FC = () => {
                 .select('*')
                 .eq('user_id', MOCK_USER_ID);
 
-            if (categoriesData) {
+            if (categoriesData && categoriesData.length > 0) {
                 setCategories(categoriesData.map(c => ({
                     ...c,
                     subcategories: c.subcategories || []

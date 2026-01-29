@@ -20,7 +20,7 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, onAdd, onUpdate, onDelete }
         color: '#f9a8a8'
     });
 
-    const colors = ['#f9a8a8', '#68b6a3', '#82aaff', '#c792ea', '#ffcb6b', '#333333'];
+    const colors = ['#f9a8a8', '#68b6a3', '#82aaff', '#c792ea', '#ffcb6b', '#212529', '#1dd1a1'];
 
     const resetForm = () => {
         setFormData({ name: '', type: 'Cuenta de Ahorro', bank: '', last4: '', balance: '', color: '#f9a8a8' });
@@ -31,7 +31,7 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, onAdd, onUpdate, onDelete }
     const handleEdit = (account: any) => {
         setFormData({
             ...account,
-            balance: account.balance.replace('$', '').replace(',', '').replace('-', '')
+            balance: account.balance.toString().replace('$', '').replace(',', '').replace('-', '')
         });
         setEditingId(account.id);
         setShowForm(true);
@@ -58,41 +58,63 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, onAdd, onUpdate, onDelete }
     return (
         <div className="main-content">
             <header className="header">
-                <h1>Cuentas y Métodos de Pago</h1>
+                <div className="header-info">
+                    <h1>Mis Cuentas</h1>
+                    <p className="header-subtitle">Gestiona tus tarjetas, bancos y efectivo en un solo lugar</p>
+                </div>
                 <button className="btn-add" onClick={() => setShowForm(true)}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    Agregar Cuenta
+                    Nueva Cuenta
                 </button>
             </header>
 
-            <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+            <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
                 {accounts.length === 0 ? (
-                    <div className="section-card glass" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
-                        <p>No hay cuentas registradas. ¡Agrega tus tarjetas, ahorros o efectivo!</p>
+                    <div className="empty-state section-card" style={{ gridColumn: '1 / -1' }}>
+                        <div className="empty-icon">📂</div>
+                        <h3 className="empty-title">Sin cuentas registradas</h3>
+                        <p className="empty-text">Agrega tu primera cuenta para empezar a registrar movimientos.</p>
+                        <button className="btn btn-secondary" onClick={() => setShowForm(true)}>Agregar ahora</button>
                     </div>
                 ) : (
                     accounts.map(a => (
                         <div
                             key={a.id}
-                            className="section-card glass payment-card"
+                            className="section-card payment-card-piquis"
                             style={{
-                                background: `linear-gradient(135deg, rgba(255,255,255,0.9) 0%, ${a.color}33 100%)`,
-                                borderLeft: `6px solid ${a.color}`
+                                background: `linear-gradient(135deg, #ffffff 0%, ${a.color}15 100%)`,
+                                borderLeft: `6px solid ${a.color}`,
+                                position: 'relative',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '1rem'
                             }}
                         >
-                            <div className="card-header">
-                                <span className="tag" style={{ background: a.color, color: '#fff' }}>{a.type}</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div>
+                                    <span style={{
+                                        padding: '4px 10px',
+                                        borderRadius: '8px',
+                                        backgroundColor: `${a.color}22`,
+                                        color: a.color,
+                                        fontSize: '0.75rem',
+                                        fontWeight: 700,
+                                        textTransform: 'uppercase'
+                                    }}>{a.type}</span>
+                                    <h3 style={{ marginTop: '0.5rem', fontWeight: 800, fontSize: '1.25rem' }}>{a.name}</h3>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{a.bank || 'Efectivo'}</p>
+                                </div>
                                 <div className="card-actions">
-                                    <button className="btn-icon" onClick={() => handleEdit(a)} title="Editar">
+                                    <button className="btn-icon" onClick={() => handleEdit(a)}>
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                         </svg>
                                     </button>
-                                    <button className="btn-icon delete" onClick={() => onDelete(a.id)} title="Eliminar">
+                                    <button className="btn-icon delete" onClick={() => onDelete(a.id)}>
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <polyline points="3 6 5 6 21 6"></polyline>
                                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -100,15 +122,21 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, onAdd, onUpdate, onDelete }
                                     </button>
                                 </div>
                             </div>
-                            <div className="card-body">
-                                <h3 className="card-name">{a.name}</h3>
-                                {a.last4 && <p className="card-number">•••• •••• •••• {a.last4}</p>}
-                                <div className="card-footer">
-                                    <span className="card-bank">{a.bank || 'Efectivo'}</span>
-                                    <span className="card-balance" style={{ color: a.balance.startsWith('-') ? 'var(--negative)' : 'var(--positive)' }}>
-                                        {a.balance}
-                                    </span>
+
+                            {a.last4 && (
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', letterSpacing: '2px' }}>
+                                    •••• •••• •••• {a.last4}
                                 </div>
+                            )}
+
+                            <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline' }}>
+                                <span style={{
+                                    fontSize: '1.75rem',
+                                    fontWeight: 900,
+                                    color: a.balance.toString().startsWith('-') ? 'var(--negative)' : 'var(--positive)'
+                                }}>
+                                    {a.balance}
+                                </span>
                             </div>
                         </div>
                     ))
@@ -117,21 +145,26 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, onAdd, onUpdate, onDelete }
 
             {showForm && (
                 <div className="modal-overlay">
-                    <div className="modal-content glass">
-                        <h2 className="section-title">{editingId ? 'Editar Cuenta' : 'Nueva Cuenta'}</h2>
+                    <div className="modal-content">
+                        <header className="modal-header">
+                            <h2>{editingId ? 'Editar Cuenta' : 'Nueva Cuenta'}</h2>
+                            <button className="btn-close" onClick={resetForm}>&times;</button>
+                        </header>
+
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
-                                <label>Nombre de la Cuenta</label>
+                                <label>Nombre Personalizado</label>
                                 <input
                                     type="text"
-                                    placeholder="Ej: Ahorro Principal, Visa Gold"
+                                    placeholder="Ej: Ahorro Vacaciones, Mi Visa"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     required
                                 />
                             </div>
+
                             <div className="form-group">
-                                <label>Tipo</label>
+                                <label>Tipo de Cuenta</label>
                                 <select
                                     value={formData.type}
                                     onChange={e => setFormData({ ...formData, type: e.target.value })}
@@ -142,8 +175,9 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, onAdd, onUpdate, onDelete }
                                     <option>Billetera Digital</option>
                                 </select>
                             </div>
+
                             <div className="form-group">
-                                <label>Saldo Inicial</label>
+                                <label>Saldo Actual</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -152,22 +186,25 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, onAdd, onUpdate, onDelete }
                                     onChange={e => setFormData({ ...formData, balance: e.target.value })}
                                     required
                                 />
-                                <small style={{ display: 'block', marginTop: '4px', opacity: 0.7 }}>
-                                    Las tarjetas de crédito se guardarán con saldo negativo automáticamente.
-                                </small>
+                                {formData.type === 'Tarjeta de Crédito' && (
+                                    <small style={{ color: 'var(--accent-primary)', fontWeight: 600, marginTop: '4px' }}>
+                                        * Las tarjetas de crédito se descuentan de tu patrimonio neto.
+                                    </small>
+                                )}
                             </div>
-                            <div className="form-group">
-                                <label>Banco (Opcional)</label>
-                                <input
-                                    type="text"
-                                    placeholder="Nombre del banco"
-                                    value={formData.bank}
-                                    onChange={e => setFormData({ ...formData, bank: e.target.value })}
-                                />
-                            </div>
-                            {formData.type.includes('Tarjeta') && (
+
+                            <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <div className="form-group">
-                                    <label>Últimos 4 dígitos</label>
+                                    <label>Banco (Opcional)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="BCP, BBVA, etc."
+                                        value={formData.bank}
+                                        onChange={e => setFormData({ ...formData, bank: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Últimos 4 (Opcional)</label>
                                     <input
                                         type="text"
                                         maxLength={4}
@@ -176,50 +213,45 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, onAdd, onUpdate, onDelete }
                                         onChange={e => setFormData({ ...formData, last4: e.target.value })}
                                     />
                                 </div>
-                            )}
+                            </div>
+
                             <div className="form-group">
-                                <label>Color Personalizado</label>
-                                <div className="color-picker">
+                                <label>Color de la tarjeta</label>
+                                <div className="color-picker-piquis" style={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: '12px',
+                                    padding: '12px',
+                                    backgroundColor: 'var(--bg-primary)',
+                                    borderRadius: '16px'
+                                }}>
                                     {colors.map(c => (
                                         <div
                                             key={c}
                                             className={`color-option ${formData.color === c ? 'active' : ''}`}
-                                            style={{ backgroundColor: c }}
+                                            style={{
+                                                backgroundColor: c,
+                                                width: '36px',
+                                                height: '36px',
+                                                borderRadius: '10px',
+                                                cursor: 'pointer',
+                                                border: formData.color === c ? '3px solid white' : 'none',
+                                                boxShadow: formData.color === c ? `0 0 0 2px ${c}` : 'none'
+                                            }}
                                             onClick={() => setFormData({ ...formData, color: c })}
                                         />
                                     ))}
                                 </div>
                             </div>
+
                             <div className="modal-actions">
                                 <button type="button" className="btn btn-secondary" onClick={resetForm}>Cancelar</button>
-                                <button type="submit" className="btn btn-primary">Guardar</button>
+                                <button type="submit" className="btn btn-primary">Guardar Cuenta</button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
-            <style>{`
-                .card-actions {
-                    display: flex;
-                    gap: 5px;
-                }
-                .btn-icon {
-                    background: none;
-                    border: none;
-                    color: var(--text-muted);
-                    cursor: pointer;
-                    padding: 4px;
-                    border-radius: 4px;
-                    transition: all 0.2s;
-                }
-                .btn-icon:hover {
-                    background: rgba(0,0,0,0.05);
-                }
-                .btn-icon.delete:hover {
-                    background: rgba(255,0,0,0.1);
-                    color: var(--negative);
-                }
-            `}</style>
         </div>
     );
 };
