@@ -98,7 +98,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onClose, onAdd, accou
                                 onChange={e => setFormData({ ...formData, method: e.target.value })}
                             >
                                 {accounts.map(a => (
-                                    <option key={a.id} value={a.name}>{a.name}</option>
+                                    <option key={a.id} value={a.name}>
+                                        {a.name} {a.last4 || ''}
+                                    </option>
                                 ))}
                             </select>
                         </div>
