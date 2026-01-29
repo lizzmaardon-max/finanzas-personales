@@ -69,11 +69,12 @@ const App: React.FC = () => {
                     subcategories: c.subcategories || []
                 })));
             } else {
-                // Default categories if none exist
+                // Default categories with subcategories as requested by the user
                 setCategories([
-                    { id: '1', name: 'Alimentación', color: '#f9a8a8', icon: '🍎', subcategories: ['Supermercado', 'Restaurantes'] },
-                    { id: '2', name: 'Vivienda', color: '#82aaff', icon: '🏠', subcategories: ['Alquiler', 'Servicios', 'Mantenimiento'] },
-                    { id: '3', name: 'Transporte', color: '#68b6a3', icon: '🚗', subcategories: ['Gasolina', 'Transporte Público'] },
+                    { id: '1', name: 'Alimentación', color: '#f9a8a8', icon: '🍎', subcategories: ['Supermercado', 'Restaurantes', 'Antojos'] },
+                    { id: '2', name: 'Vivienda', color: '#82aaff', icon: '🏠', subcategories: ['Alquiler', 'Mantenimiento del hogar', 'Reparaciones', 'Muebles / decoración', 'Artículos del hogar'] },
+                    { id: '3', name: 'Transporte', color: '#68b6a3', icon: '🚗', subcategories: ['Gasolina', 'Transporte Público', 'Taller / Mantenimiento'] },
+                    { id: '4', name: 'Servicios', color: '#c792ea', icon: '💡', subcategories: ['Energía', 'Agua', 'Internet', 'Celular'] },
                 ]);
             }
         } catch (error) {
@@ -199,9 +200,26 @@ const App: React.FC = () => {
     };
 
     const updateCategories = async (updated: any[]) => {
-        // For simplicity, we'll just update the local state for now
-        // A full implementation would sync each changed category
+        // Find which categories changed to update Supabase
+        // For development speed, we'll sync the whole set if it's small, 
+        // or just update the local state and provide a button to "Save Changes" if it grows.
+        // For now, let's update a single category when modified in the component.
         setCategories(updated);
+
+        // Example: Sync to Supabase if ID is UUID (persisted)
+        for (const cat of updated) {
+            if (cat.id.length > 20) { // Simple UUID check
+                await supabase
+                    .from('categories')
+                    .update({
+                        name: cat.name,
+                        color: cat.color,
+                        icon: cat.icon,
+                        subcategories: cat.subcategories
+                    })
+                    .eq('id', cat.id);
+            }
+        }
     };
 
     const renderPage = () => {
