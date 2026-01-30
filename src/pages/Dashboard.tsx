@@ -33,11 +33,13 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [editingBudget, setEditingBudget] = useState<any>(null);
     const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
 
-    // Dynamic KPI Calculation
-    const accountSum = accounts.reduce((acc, a) => {
-        const val = parseFloat(a.balance.toString().replace('$', '').replace(',', ''));
-        return acc + val;
-    }, 0);
+    // Dynamic KPI Calculation - Filter out Savings from "Available"
+    const accountSum = accounts
+        .filter(a => a.type !== 'Ahorro')
+        .reduce((acc, a) => {
+            const val = parseFloat(a.balance.toString().replace('$', '').replace(',', ''));
+            return acc + val;
+        }, 0);
 
     const income = transactions
         .filter(t => t.type?.toLowerCase() === 'ingreso' && t.date.startsWith(selectedMonth) && t.owner === 'Mayra')
