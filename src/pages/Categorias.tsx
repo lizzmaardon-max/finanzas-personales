@@ -14,7 +14,7 @@ const Categorias: React.FC<CategoriasProps> = ({ categories, onUpdate }) => {
     const [newSub, setNewSub] = useState('');
 
     const colors = ['#f9a8a8', '#68b6a3', '#82aaff', '#c792ea', '#ffcb6b', '#a8d8ea', '#ff9f43', '#1dd1a1', '#212529'];
-    const emojis = ['📁', '🍎', '🏠', '🚗', '🏥', '🎮', '🎓', '👗', '🍽️', '🍿', '💡', '🛠️', '✈️', '🐶', '🏀', '💻', '🎁', '💰'];
+    const emojis = ['📁', '👶', '🍎', '🏠', '🚗', '🏥', '🎮', '🎓', '👗', '🍽️', '🍿', '💡', '🛠️', '✈️', '🐶', '🏀', '💻', '🎁', '💰'];
 
     const resetCatForm = () => {
         setNewCat({ name: '', color: '#f9a8a8', icon: '📁' });

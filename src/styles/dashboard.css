@@ -29,7 +29,7 @@
     --warning: #fab005;
 
     --sidebar-width: 260px;
-    --bottom-nav-height: 70px;
+    --bottom-nav-height: 75px;
     --header-height: 80px;
 }
 
@@ -165,6 +165,24 @@ body {
     border-radius: var(--radius-full);
 }
 
+.month-selector-piquis {
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent-medium);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-main);
+    cursor: pointer;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+}
+
+.month-selector-piquis:focus {
+    border-color: var(--accent-primary);
+}
+
 /* Buttons */
 .btn-add {
     height: 48px;
@@ -193,16 +211,15 @@ body {
 /* KPI Grid */
 .kpi-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    /* 1 col on small phones */
-    gap: 1rem;
-    margin-bottom: 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2rem;
 }
 
 .stat-card {
     background: var(--bg-secondary);
-    padding: 1.5rem;
-    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
     display: flex;
     flex-direction: column;
     border: 1px solid var(--accent-soft);
@@ -228,10 +245,10 @@ body {
 }
 
 .stat-value {
-    font-size: 1.75rem;
+    font-size: 1.4rem;
     font-weight: 800;
     color: var(--text-main);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .stat-change {
