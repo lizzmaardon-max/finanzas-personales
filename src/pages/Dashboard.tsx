@@ -197,7 +197,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div className="kpi-grid">
                 <StatCard
                     label="Saldo Inicial"
-                    value={`$${initialBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    value={`$${initialBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="+ $0 este mes"
                     trend="neutral"
                     icon={iconBase(<>
@@ -206,7 +206,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
                 <StatCard
                     label="Disponible hoy"
-                    value={`$${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    value={`$${totalBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="+ $0 este mes"
                     trend="up"
                     icon={iconBase(<>
@@ -217,7 +217,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
                 <StatCard
                     label="Ingresado este mes"
-                    value={`$${income.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    value={`$${income.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="+ $0 este mes"
                     trend="up"
                     icon={iconBase(<>
@@ -227,7 +227,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
                 <StatCard
                     label="Gastado este mes"
-                    value={`$${expenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    value={`$${expenses.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="$0 este mes"
                     trend="neutral"
                     icon={iconBase(<>
@@ -239,7 +239,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
                 <StatCard
                     label="Ahorro total"
-                    value={`$${totalSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    value={`$${totalSavings.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change={`Basado en ${accounts.filter(a => a.type === 'Ahorro').length} cuentas`}
                     trend="neutral"
                     icon={iconBase(<>
@@ -250,7 +250,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
                 <StatCard
                     label="Deuda pendiente"
-                    value={`$${totalDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    value={`$${totalDebt.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="Sin cambios este mes"
                     trend="neutral"
                     icon={iconBase(<>

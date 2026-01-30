@@ -85,7 +85,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onClose, onAdd, onUpd
 
         const cardColor = selectedAccount ? selectedAccount.color : null;
         const typePrefix = formData.type === 'Ingreso' ? '+' : '-';
-        const formattedAmount = `${typePrefix}$${parseFloat(formData.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const formattedAmount = `${typePrefix}$${parseFloat(formData.amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
         const payload = {
             ...formData,
@@ -243,7 +243,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onClose, onAdd, onUpd
                                         e.preventDefault();
                                         setFormData({ ...formData, owner: p });
                                     }}
-                                    style={{ cursor: 'pointer', pointerEvents: 'auto' }}
                                 >
                                     {p === 'Mayra' ? '👩‍💼' : '👨‍💼'}
                                     <span>{p}</span>

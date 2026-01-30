@@ -20,6 +20,8 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, onAdd, onUpda
         balance: '',
         color: '#f9a8a8'
     });
+    const [originalInitialBalance, setOriginalInitialBalance] = useState<number | null>(null);
+    const [originalCurrentBalance, setOriginalCurrentBalance] = useState<number | null>(null);
 
     const colors = ['#f9a8a8', '#68b6a3', '#82aaff', '#c792ea', '#ffcb6b', '#212529', '#1dd1a1'];
 
@@ -56,6 +58,9 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, onAdd, onUpda
         const currentBalanceNum = parseFloat(account.balance.toString().replace(/[^\d.-]/g, ''));
         const initialBalance = currentBalanceNum - netChange;
 
+        setOriginalInitialBalance(initialBalance);
+        setOriginalCurrentBalance(currentBalanceNum);
+
         setFormData({
             ...account,
             balance: initialBalance.toFixed(2)
@@ -66,12 +71,25 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, onAdd, onUpda
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const numBalance = parseFloat(formData.balance) || 0;
-        const finalBalance = formData.type === 'Tarjeta de Crédito' ? -Math.abs(numBalance) : Math.abs(numBalance);
+        const inputInitialBalance = parseFloat(formData.balance) || 0;
+
+        let finalBalanceStr = '';
+
+        if (editingId && originalInitialBalance !== null && originalCurrentBalance !== null) {
+            // Logic: Current = OldCurrent + (NewInitial - OldInitial)
+            const delta = inputInitialBalance - originalInitialBalance;
+            const newCurrentBalance = originalCurrentBalance + delta;
+            finalBalanceStr = `${newCurrentBalance < 0 ? '-' : ''}$${Math.abs(newCurrentBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+            // New account: balance entered IS the current balance (which is also the initial)
+            const numBalance = inputInitialBalance;
+            const finalBalance = formData.type === 'Tarjeta de Crédito' ? -Math.abs(numBalance) : Math.abs(numBalance);
+            finalBalanceStr = `${finalBalance < 0 ? '-' : ''}$${Math.abs(finalBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
 
         const accountData = {
             ...formData,
-            balance: `${finalBalance < 0 ? '-' : ''}$${Math.abs(finalBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            balance: finalBalanceStr
         };
 
         if (editingId) {
@@ -134,7 +152,7 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, onAdd, onUpda
                         });
 
                         const initialBalanceValue = currentBalanceValue - transactionsImpact;
-                        const initialBalanceStr = `$${initialBalanceValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                        const initialBalanceStr = `$${Math.abs(initialBalanceValue).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
                         return (
                             <div
@@ -245,7 +263,7 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, onAdd, onUpda
                             </div>
 
                             <div className="form-group">
-                                <label>Saldo Actual</label>
+                                <label>{editingId ? 'Saldo Inicial' : 'Saldo Actual'}</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -254,6 +272,11 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, onAdd, onUpda
                                     onChange={e => setFormData({ ...formData, balance: e.target.value })}
                                     required
                                 />
+                                {editingId && (
+                                    <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                        * Al modificar el saldo inicial, se ajustará automáticamente tu saldo actual.
+                                    </small>
+                                )}
                                 {formData.type === 'Tarjeta de Crédito' && (
                                     <small style={{ color: 'var(--accent-primary)', fontWeight: 600, marginTop: '4px' }}>
                                         * Las tarjetas de crédito se descuentan de tu patrimonio neto.

@@ -51,21 +51,21 @@ const BabySection: React.FC<BabySectionProps> = ({ transactions, categories, onU
             <div className="kpi-grid">
                 <StatCard
                     label="Gasto Total Bebé"
-                    value={`$${totalBebé.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                    value={`$${totalBebé.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="Suma de ambos"
                     trend="neutral"
                     icon={<span style={{ fontSize: '1.5rem' }}>👶</span>}
                 />
                 <StatCard
                     label="Aporte Mayra"
-                    value={`$${totalMayra.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                    value={`$${totalMayra.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change={`${totalBebé > 0 ? ((totalMayra / totalBebé) * 100).toFixed(0) : 0}% del total`}
                     trend="up"
                     icon={<span style={{ fontSize: '1.5rem' }}>👩‍💼</span>}
                 />
                 <StatCard
                     label="Aporte Manuel"
-                    value={`$${totalManuel.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                    value={`$${totalManuel.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change={`${totalBebé > 0 ? ((totalManuel / totalBebé) * 100).toFixed(0) : 0}% del total`}
                     trend="up"
                     icon={<span style={{ fontSize: '1.5rem' }}>👨‍💼</span>}

@@ -37,7 +37,7 @@ const App: React.FC = () => {
                 return {
                     ...a,
                     name: a.name.replace('\u200B', '').trim(),
-                    balance: `${a.balance < 0 ? '-' : ''}$${Math.abs(parseFloat(a.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    balance: `${a.balance < 0 ? '-' : ''}$${Math.abs(parseFloat(a.balance.toString().replace(/[^\d.-]/g, ''))).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`,
                     type: a.type === 'credito' ? 'Tarjeta de Crédito' :
                         a.type === 'efectivo' ? 'Efectivo' :
                             (a.type === 'banco' && isAhorro) ? 'Ahorro' :
@@ -92,7 +92,7 @@ const App: React.FC = () => {
 
                     return {
                         ...t,
-                        amount: `${t.type?.toLowerCase() === 'ingreso' ? '+' : '-'}$${Math.abs(parseFloat(t.amount)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                        amount: `${t.type?.toLowerCase() === 'ingreso' ? '+' : '-'}$${Math.abs(parseFloat(t.amount.toString().replace(/[^\d.-]/g, ''))).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`,
                         category: categoryName,
                         method: (t.type === 'transferencia')
                             ? `${acc ? acc.name : '?'} ➔ ${destAcc ? destAcc.name : '?'}`
