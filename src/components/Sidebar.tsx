@@ -30,7 +30,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
         {
             id: 'bebe',
             label: 'Bebé',
-            icon: <circle cx="12" cy="12" r="10" /> // Placeholder circle, will use 👶 emoji in render if needed or just keep it simple
+            icon: <circle cx="12" cy="12" r="10" />
+        },
+        {
+            id: 'tasa-cero',
+            label: 'Tasa Cero',
+            icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         }
     ];
 

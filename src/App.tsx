@@ -5,6 +5,7 @@ import Transacciones from './pages/Transacciones';
 import Cuentas from './pages/Cuentas';
 import Categorias from './pages/Categorias';
 import BabySection from './pages/BabySection';
+import Installments from './pages/Installments';
 import { supabase } from './lib/supabase';
 import './styles/dashboard.css';
 
@@ -16,6 +17,7 @@ const App: React.FC = () => {
     const [accounts, setAccounts] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [budgets, setBudgets] = useState<any[]>([]);
+    const [installmentPlans, setInstallmentPlans] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -106,6 +108,18 @@ const App: React.FC = () => {
                 });
                 setTransactions(adaptedTransactions);
             }
+            // Fetch Installment Plans
+            const { data: plansData } = await supabase
+                .from('installment_plans')
+                .select('*')
+                .eq('user_id', MOCK_USER_ID)
+                .eq('is_active', true);
+            setInstallmentPlans(plansData || []);
+
+            if (plansData && plansData.length > 0) {
+                await processDueInstallments(plansData);
+            }
+
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -132,7 +146,100 @@ const App: React.FC = () => {
         localStorage.setItem('finanzas_budgets', JSON.stringify(newBudgets));
     };
 
-    const addTransaction = async (t: any) => {
+    const processDueInstallments = async (plans: any[]) => {
+        let needsRefresh = false;
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const currentDay = now.getDate();
+
+        for (const plan of plans) {
+            if (!plan.is_active) continue;
+
+            // Check if payment day is today or passed, and hasn't been processed this month
+            const lastProcessed = plan.last_processed_date ? new Date(plan.last_processed_date) : null;
+            const isDifferentMonth = !lastProcessed ||
+                lastProcessed.getMonth() !== currentMonth ||
+                lastProcessed.getFullYear() !== currentYear;
+
+            if (isDifferentMonth && currentDay >= plan.payment_day) {
+                // Time to process a new installment
+                console.log(`Processing installment for: ${plan.description}`);
+
+                // 1. Create transaction
+                const transaction = {
+                    accountId: plan.account_id,
+                    categoryId: plan.category_id,
+                    amount: plan.installment_amount.toString(),
+                    type: 'Gasto',
+                    date: now.toISOString().split('T')[0],
+                    description: `Cuota ${plan.completed_installments + 1}/${plan.total_installments}: ${plan.description}`
+                };
+
+                await addTransaction(transaction, true);
+
+                // 2. Update plan
+                const newCompleted = plan.completed_installments + 1;
+                const newRemaining = Math.max(0, plan.remaining_amount - plan.installment_amount);
+                const isActive = newCompleted < plan.total_installments;
+
+                await supabase.from('installment_plans').update({
+                    completed_installments: newCompleted,
+                    remaining_amount: newRemaining,
+                    is_active: isActive,
+                    last_processed_date: now.toISOString().split('T')[0]
+                }).eq('id', plan.id);
+
+                needsRefresh = true;
+            }
+        }
+
+        if (needsRefresh) {
+            await fetchData();
+        }
+    };
+
+    const addInstallmentPlan = async (plan: any) => {
+        const now = new Date();
+        const currentDay = now.getDate();
+
+        // If payment day has already passed this month, don't auto-charge for this month
+        const lastProcessedDate = plan.payment_day < currentDay
+            ? now.toISOString().split('T')[0]
+            : null;
+
+        const { error } = await supabase
+            .from('installment_plans')
+            .insert([{ ...plan, user_id: MOCK_USER_ID, last_processed_date: lastProcessedDate }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error adding installment plan:', error);
+            alert('Error al guardar el plan: ' + error.message);
+            return;
+        }
+
+        await fetchData();
+    };
+
+    const deleteInstallmentPlan = async (id: string) => {
+        if (!window.confirm('¿Estás seguro de eliminar este plan? No se borrarán las transacciones ya registradas.')) return;
+
+        const { error } = await supabase
+            .from('installment_plans')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting plan:', error);
+            return;
+        }
+
+        setInstallmentPlans(installmentPlans.filter(p => p.id !== id));
+    };
+
+    const addTransaction = async (t: any, skipRefresh = false) => {
         // Map UI labels to Database Enum (lowercase/underscore)
         const dbType = t.type === 'Gasto' ? 'gasto' :
             t.type === 'Ingreso' ? 'ingreso' :
@@ -190,7 +297,9 @@ const App: React.FC = () => {
         }
 
         // Refresh data to ensure everything is in sync
-        await fetchData();
+        if (!skipRefresh) {
+            await fetchData();
+        }
     };
 
     const updateTransaction = async (id: string, t: any) => {
@@ -456,6 +565,16 @@ const App: React.FC = () => {
                         onDeleteTransaction={deleteTransaction}
                     />
                 );
+            case 'tasa-cero':
+                return (
+                    <Installments
+                        plans={installmentPlans}
+                        accounts={accounts}
+                        categories={categories}
+                        onAddPlan={addInstallmentPlan}
+                        onDeletePlan={deleteInstallmentPlan}
+                    />
+                );
             default:
                 return (
                     <Dashboard
@@ -522,6 +641,15 @@ const App: React.FC = () => {
                         <line x1="7" y1="7" x2="7.01" y2="7"></line>
                     </svg>
                     <span>Etiquetas</span>
+                </button>
+                <button
+                    className={`nav-item ${currentPage === 'tasa-cero' ? 'active' : ''}`}
+                    onClick={() => setCurrentPage('tasa-cero')}
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Tasa 0</span>
                 </button>
             </nav>
 
