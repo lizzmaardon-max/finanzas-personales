@@ -291,10 +291,19 @@ const BudgetTable: React.FC<BudgetTableProps> = ({
                 .v3-full-btn:hover { background: white; border-color: var(--accent-medium); }
 
                 @media (max-width: 768px) {
+                    .budget-v3-container { gap: 8px; }
                     .v3-kpi-grid { gap: 6px; }
-                    .v3-kpi-card { padding: 6px 10px; height: 52px; }
-                    .v3-list-rows { border-radius: 16px; }
-                    .v3-row { padding: 12px; }
+                    .v3-kpi-card { padding: 5px 10px; height: 48px; border-radius: 10px; }
+                    .v3-val { font-size: 0.85rem; }
+                    .v3-label { font-size: 0.55rem; }
+                    .v3-row { padding: 6px 10px; min-height: 38px; }
+                    .v3-name { font-size: 0.75rem; }
+                    .v3-amount { font-size: 0.8rem; }
+                    .v3-list-rows { border-radius: 12px; }
+                    .v3-budget-row { padding: 4px 10px; min-height: 42px; }
+                    .v3-row-content { gap: 2px; }
+                    .v3-progress-container { gap: 6px; }
+                    .v3-row-values { font-size: 0.65rem; }
                 }
             `}</style>
         </div>

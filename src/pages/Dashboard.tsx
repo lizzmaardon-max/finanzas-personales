@@ -35,6 +35,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [editingTx, setEditingTx] = useState<any>(null);
     const [editingBudget, setEditingBudget] = useState<any>(null);
     const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
+    const isMobile = window.innerWidth < 768;
 
     // --- NEW BUDGET KPI CALCULATIONS ---
 
@@ -238,6 +239,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     value={`$${initialBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="+ $0 este mes"
                     trend="neutral"
+                    isCompact={isMobile}
                     icon={iconBase(<>
                         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                     </>)}
@@ -247,6 +249,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     value={`$${totalBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="+ $0 este mes"
                     trend="up"
+                    isCompact={isMobile}
                     icon={iconBase(<>
                         <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
                         <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
@@ -258,6 +261,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     value={`$${income.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="+ $0 este mes"
                     trend="up"
+                    isCompact={isMobile}
                     icon={iconBase(<>
                         <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
                         <polyline points="17 6 23 6 23 12" />
@@ -268,6 +272,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     value={`$${expenses.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="$0 este mes"
                     trend="neutral"
+                    isCompact={isMobile}
                     icon={iconBase(<>
                         <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
                         <path d="M16 8h-6" />
@@ -280,6 +285,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     value={`$${totalSavings.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change={`Basado en ${accounts.filter(a => a.type === 'Ahorro').length} cuentas`}
                     trend="neutral"
+                    isCompact={isMobile}
                     icon={iconBase(<>
                         <circle cx="12" cy="12" r="10" />
                         <circle cx="12" cy="12" r="6" />
@@ -291,6 +297,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     value={`$${totalDebt.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                     change="Sin cambios este mes"
                     trend="neutral"
+                    isCompact={isMobile}
                     icon={iconBase(<>
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </>)}

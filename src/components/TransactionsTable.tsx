@@ -347,15 +347,15 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions, cat
                     gap: 12px;
                 }
                 .transaction-card-mobile {
-                    padding: 1rem;
-                    border-radius: var(--radius-lg);
+                    padding: 0.75rem;
+                    border-radius: 12px;
                     display: flex;
                     flex-direction: column;
-                    gap: 8px;
+                    gap: 4px;
                 }
                 .card-top { display: flex; justify-content: space-between; align-items: center; }
-                .card-category { font-weight: 800; font-size: 1.05rem; }
-                .card-amount { font-weight: 900; font-size: 1.1rem; }
+                .card-category { font-weight: 800; font-size: 0.9rem; }
+                .card-amount { font-weight: 900; font-size: 1rem; }
                 .card-amount.positive { color: var(--positive); }
                 .card-amount.negative { color: var(--negative); }
                 

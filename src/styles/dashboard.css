@@ -59,10 +59,11 @@ body {
 
 .main-content {
     flex: 1;
-    padding: 1rem;
-    padding-bottom: calc(var(--bottom-nav-height) + 2rem);
-    /* Space for bottom nav */
+    padding: 0.75rem;
+    padding-bottom: calc(var(--bottom-nav-height) + 1.5rem);
     max-width: 100%;
+    overflow-x: hidden;
+    /* Prevent horizontal scroll */
 }
 
 /* Glassmorphism */
@@ -211,61 +212,84 @@ body {
 /* KPI Grid */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 1rem;
+    }
 }
 
 .stat-card {
     background: var(--bg-secondary);
-    padding: 1rem 1.25rem;
-    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     border: 1px solid var(--accent-soft);
     position: relative;
     overflow: hidden;
+    min-height: 60px;
+    justify-content: center;
+}
+
+.stat-card.compact {
+    padding: 8px 10px;
+    min-height: 52px;
+    border-radius: 10px;
 }
 
 .stat-icon {
     position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
     color: var(--text-light);
-    opacity: 0.5;
+    opacity: 0.25;
+    pointer-events: none;
+}
+
+.stat-card.compact .stat-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
 }
 
 .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.5rem;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+}
+
+.stat-card.compact .stat-label {
+    font-size: 0.6rem;
 }
 
 .stat-value {
-    font-size: 1.4rem;
-    font-weight: 800;
+    font-size: 1.1rem;
+    font-weight: 850;
     color: var(--text-main);
-    margin-bottom: 0.25rem;
+    letter-spacing: -0.5px;
+}
+
+.stat-card.compact .stat-value {
+    font-size: 1rem;
 }
 
 .stat-change {
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
-.stat-change.neutral {
-    color: var(--text-muted);
-}
-
-.stat-change.up {
-    color: var(--positive);
-}
-
-.stat-change.down {
-    color: var(--negative);
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 /* Dashboard Grid */
