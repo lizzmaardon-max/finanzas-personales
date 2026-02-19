@@ -685,7 +685,6 @@ const App: React.FC = () => {
                         onAddBudget={addBudget}
                         onUpdateBudget={updateBudget}
                         onDeleteBudget={deleteBudget}
-                        onNavigate={setCurrentPage}
                     />
                 );
             case 'transacciones':
@@ -766,7 +765,6 @@ const App: React.FC = () => {
                         onAddBudget={addBudget}
                         onUpdateBudget={updateBudget}
                         onDeleteBudget={deleteBudget}
-                        onNavigate={setCurrentPage}
                     />
                 );
         }

@@ -20,13 +20,12 @@ interface DashboardProps {
     onAddBudget: (b: any) => void;
     onUpdateBudget: (updated: any) => void;
     onDeleteBudget: (id: string) => void;
-    onNavigate: (page: string) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
     transactions, accounts, categories, budgets, loans, installmentPlans,
     onAddTransaction, onUpdateTransaction, onDeleteTransaction,
-    onAddBudget, onUpdateBudget, onDeleteBudget, onNavigate
+    onAddBudget, onUpdateBudget, onDeleteBudget
 }) => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
