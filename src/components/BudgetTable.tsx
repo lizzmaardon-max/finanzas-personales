@@ -16,14 +16,14 @@ interface BudgetTableProps {
     onEdit: (budget: any) => void;
     onDelete: (id: string) => void;
     onAdd: (categoryId: string) => void;
-    onViewFull?: () => void;
+    onOpenFull?: () => void;
     selectedMonth: string;
     isDetailedView?: boolean;
 }
 
 const BudgetTable: React.FC<BudgetTableProps> = ({
     budgets, transactions, categories, loans, installmentPlans, kpis,
-    onEdit, onDelete, onAdd, onViewFull, selectedMonth, isDetailedView = false
+    onEdit, onDelete, onAdd, onOpenFull, selectedMonth, isDetailedView = false
 }) => {
     const [viewMode, setViewMode] = React.useState<'top' | 'all'>(isDetailedView ? 'all' : 'top');
     const [showFixed, setShowFixed] = React.useState(!isDetailedView); // Expanded by default in desktop/detailed
@@ -161,6 +161,29 @@ const BudgetTable: React.FC<BudgetTableProps> = ({
                         const isWarning = cat.limit > 0 && cat.percentage > 80;
                         const barColor = isOver ? '#e74c3c' : (isWarning ? '#f39c12' : '#27ae60');
 
+                        if (isMobile && !isDetailedView) {
+                            return (
+                                <div key={cat.id} className="v3-row v3-row-compact-mobile">
+                                    <div className="v3-row-left">
+                                        <span className="v3-icon-sm">{cat.icon || '📁'}</span>
+                                        <span className="v3-name-sm">{cat.name}</span>
+                                    </div>
+                                    <div className="v3-row-right">
+                                        <div className="v3-row-values-sm">
+                                            <span className="v3-spent-sm">{formatCurrency(cat.spent)}</span>
+                                            <span className="v3-limit-sm">/ {cat.limit > 0 ? formatCurrency(cat.limit) : '—'}</span>
+                                        </div>
+                                        <div className="v3-mini-progress">
+                                            <div
+                                                className="v3-mini-fill"
+                                                style={{ width: `${Math.min(cat.percentage, 100)}%`, backgroundColor: barColor }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+
                         return (
                             <div key={cat.id} className="v3-row v3-budget-row">
                                 <div className="v3-row-main">
@@ -202,7 +225,7 @@ const BudgetTable: React.FC<BudgetTableProps> = ({
                 </div>
 
                 {viewMode === 'top' && processedCategories.length > topCount && (
-                    <button className="v3-full-btn" onClick={() => onViewFull ? onViewFull() : setViewMode('all')}>
+                    <button className="v3-full-btn" onClick={() => onOpenFull ? onOpenFull() : setViewMode('all')}>
                         Ver presupuesto completo
                     </button>
                 )}
@@ -304,6 +327,18 @@ const BudgetTable: React.FC<BudgetTableProps> = ({
                     .v3-row-content { gap: 2px; }
                     .v3-progress-container { gap: 6px; }
                     .v3-row-values { font-size: 0.65rem; }
+
+                    /* Compact rows */
+                    .v3-row-compact-mobile { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; min-height: 40px; }
+                    .v3-row-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+                    .v3-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 80px; }
+                    .v3-icon-sm { font-size: 0.9rem; }
+                    .v3-name-sm { font-size: 0.75rem; font-weight: 750; color: var(--text-main); }
+                    .v3-row-values-sm { display: flex; gap: 4px; align-items: baseline; }
+                    .v3-spent-sm { font-size: 0.75rem; font-weight: 850; }
+                    .v3-limit-sm { font-size: 0.6rem; color: var(--text-muted); font-weight: 600; }
+                    .v3-mini-progress { width: 40px; height: 1.5px; background: var(--bg-primary); border-radius: 1px; overflow: hidden; }
+                    .v3-mini-fill { height: 100%; transition: width 0.3s; }
                 }
             `}</style>
         </div>
