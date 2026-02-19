@@ -12,32 +12,71 @@ interface DashboardProps {
     accounts: any[];
     categories: any[];
     budgets: any[];
+    loans: any[];
+    installmentPlans: any[];
     onAddTransaction: (t: any) => void;
     onUpdateTransaction: (id: string, t: any) => void;
     onDeleteTransaction?: (tx: any) => void;
     onAddBudget: (b: any) => void;
     onUpdateBudget: (updated: any) => void;
     onDeleteBudget: (id: string) => void;
+    onNavigate: (page: string) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
-    transactions, accounts, categories, budgets,
+    transactions, accounts, categories, budgets, loans, installmentPlans,
     onAddTransaction, onUpdateTransaction, onDeleteTransaction,
-    onAddBudget, onUpdateBudget, onDeleteBudget
+    onAddBudget, onUpdateBudget, onDeleteBudget, onNavigate
 }) => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
+    const [isFullBudgetOpen, setIsFullBudgetOpen] = useState(false);
     const [showTypeSelector, setShowTypeSelector] = useState(false);
     const [selectedType, setSelectedType] = useState<string>('Gasto');
     const [editingTx, setEditingTx] = useState<any>(null);
     const [editingBudget, setEditingBudget] = useState<any>(null);
     const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
 
-    // Dynamic KPI Calculation - Filter out Savings from "Available"
+    // --- NEW BUDGET KPI CALCULATIONS ---
+
+    // 1. Ingresos del mes
+    const monthlyIncome = transactions
+        .filter(t => t.type?.toLowerCase() === 'ingreso' && t.date.startsWith(selectedMonth))
+        .reduce((acc, t) => acc + Math.abs(parseFloat(t.amount.toString().replace(/[^\d.-]/g, ''))), 0);
+
+    // 2. Gastos Fijos (Préstamos + Tasa Cero)
+    const fixedLoanExpenses = loans
+        .reduce((acc, l) => acc + (parseFloat(l.monthly_installment) || 0), 0);
+
+    const fixedInstallmentExpenses = installmentPlans
+        .filter(p => p.is_active)
+        .reduce((acc, p) => acc + (parseFloat(p.installment_amount) || 0), 0);
+
+    const totalFixedExpenses = fixedLoanExpenses + fixedInstallmentExpenses;
+
+    // 3. Gastos Variables Gastados
+    // Exclude: "Créditos" and Tasa Cero transactions manually
+    const creditCategory = categories.find(c => c.name.toLowerCase().includes('crédito'));
+    const installmentsCategory = categories.find(c => c.name.toLowerCase().includes('compras') || c.name.toLowerCase().includes('tasa cero'));
+
+    const variableExpenses = transactions
+        .filter(t => {
+            const isGasto = t.type?.toLowerCase() === 'gasto';
+            const isThisMonth = t.date.startsWith(selectedMonth);
+            const isFixed = (creditCategory && t.category_id === creditCategory.id) ||
+                (installmentsCategory && t.category_id === installmentsCategory.id);
+            return isGasto && isThisMonth && !isFixed;
+        })
+        .reduce((acc, t) => acc + Math.abs(parseFloat(t.amount.toString().replace(/[^\d.-]/g, ''))), 0);
+
+    // 4. Disponible Restante
+    const remainingAvailable = monthlyIncome - totalFixedExpenses - variableExpenses;
+
+    // --- OLD KPI CALCULATIONS (Keeping for StatCards if needed, but will focus on Budget Summary) ---
     const accountSum = accounts
         .filter(a => a.type !== 'Ahorro')
         .reduce((acc, a) => {
-            const val = parseFloat(a.balance.toString().replace('$', '').replace(',', ''));
+            const val = parseFloat(a.balance.toString().replace(/[^\d.-]/g, ''));
             return acc + val;
         }, 0);
 
@@ -259,18 +298,104 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
             </div>
 
-            <div className="dashboard-grid">
+            {/* Quick Add Chips */}
+            <section className="quick-chips-section">
+                <span className="chips-label">Gasto rápido:</span>
+                <div className="chips-container">
+                    {[
+                        { label: '🛒 Super', cat: 'Supermercado' },
+                        { label: '🍕 Comida', cat: 'Comida' },
+                        { label: '🚗 Transporte', cat: 'Transporte' },
+                        { label: '👶 Bebé', cat: 'Bebé' }
+                    ].map(chip => (
+                        <button
+                            key={chip.label}
+                            className="chip-btn"
+                            onClick={() => {
+                                const foundCat = categories.find(c => c.name.toLowerCase().includes(chip.cat.toLowerCase()));
+                                handleOpenForm('Gasto');
+                                if (foundCat) {
+                                    // We'll need a way to pass the category to the form.
+                                    // For now, let's just use the existing handleOpenForm which opens the modal.
+                                    // I will modify Dashboard to support pre-filled categories if needed.
+                                    setTimeout(() => {
+                                        const event = new CustomEvent('prefill-category', { detail: foundCat.id });
+                                        window.dispatchEvent(event);
+                                    }, 100);
+                                }
+                            }}
+                        >
+                            {chip.label}
+                        </button>
+                    ))}
+                </div>
+            </section>
+
+
+            <div className="dashboard-grid v3-layout">
                 <div className="left-column">
-                    <section className="section-card">
-                        <h2 className="section-title">Transacciones recientes</h2>
+                    {/* Sección móvil: Presupuesto al inicio */}
+                    <div className="mobile-only-section">
+                        <section className="section-card budget-section-v3">
+                            <BudgetTable
+                                budgets={budgets}
+                                transactions={transactions.filter(t => t.owner === 'Mayra')}
+                                categories={categories}
+                                selectedMonth={selectedMonth}
+                                loans={loans}
+                                installmentPlans={installmentPlans}
+                                kpis={{
+                                    income: monthlyIncome,
+                                    fixed: totalFixedExpenses,
+                                    variable: variableExpenses,
+                                    remaining: remainingAvailable
+                                }}
+                                isDetailedView={false}
+                                onViewFull={() => setIsFullBudgetOpen(true)}
+                                onAdd={(catId) => {
+                                    setEditingBudget({ category_id: catId });
+                                    setIsBudgetFormOpen(true);
+                                }}
+                                onEdit={(b) => {
+                                    setEditingBudget(b);
+                                    setIsBudgetFormOpen(true);
+                                }}
+                                onDelete={onDeleteBudget}
+                            />
+                        </section>
+                    </div>
+
+                    <div className="quick-chips-section">
+                        {categories.slice(0, 8).map(cat => (
+                            <button key={cat.id} className="quick-chip" onClick={() => {
+                                setEditingTx({
+                                    amount: '',
+                                    date: new Date().toISOString().split('T')[0],
+                                    category_id: cat.id,
+                                    type: 'Gasto',
+                                    description: '',
+                                    owner: 'Mayra'
+                                });
+                                setIsFormOpen(true);
+                            }}>
+                                <span className="chip-icon">{cat.icon || '📁'}</span>
+                                <span className="chip-name">{cat.name}</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="transactions-section">
+                        <div className="section-header-flex">
+                            <h2 className="section-title">Transacciones recientes</h2>
+                            <button className="btn-secondary btn-small" onClick={() => handleOpenForm('Gasto')}>Registrar gasto</button>
+                        </div>
                         <TransactionsTable
-                            transactions={transactions.filter(t => t.date.startsWith(selectedMonth)).slice(0, 5)}
+                            transactions={transactions.filter(t => t.date.startsWith(selectedMonth) && t.owner === 'Mayra').slice(0, 10)}
                             categories={categories}
-                            onOpenForm={() => handleOpenForm('Gasto')}
                             onEdit={handleEdit}
                             onDelete={onDeleteTransaction}
                         />
-                    </section>
+                    </div>
                 </div>
 
                 <div className="right-column">
@@ -289,13 +414,22 @@ const Dashboard: React.FC<DashboardProps> = ({
                         )}
                     </section>
 
-                    <section className="section-card">
-                        <h2 className="section-title">Resumen de presupuesto</h2>
+                    <section className="section-card desktop-only-section">
                         <BudgetTable
                             budgets={budgets}
                             transactions={transactions.filter(t => t.owner === 'Mayra')}
                             categories={categories}
                             selectedMonth={selectedMonth}
+                            loans={loans}
+                            installmentPlans={installmentPlans}
+                            kpis={{
+                                income: monthlyIncome,
+                                fixed: totalFixedExpenses,
+                                variable: variableExpenses,
+                                remaining: remainingAvailable
+                            }}
+                            isDetailedView={false}
+                            onViewFull={() => setIsFullBudgetOpen(true)}
                             onAdd={(catId) => {
                                 setEditingBudget({ category_id: catId });
                                 setIsBudgetFormOpen(true);
@@ -311,28 +445,30 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             <style>{`
-                .quick-action-block {
-                    margin-bottom: 2rem;
-                    padding: 1.25rem 1.5rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    border-radius: var(--radius-lg);
-                    gap: 1rem;
+                .v3-layout { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start; }
+                .mobile-only-section { display: none; }
+                
+                .budget-section-v3 { border: 1px solid var(--accent-soft); }
+
+                @media (max-width: 1024px) {
+                    .v3-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+                    .mobile-only-section { display: block; margin-bottom: 2rem; }
+                    .desktop-only-section { display: none; }
+                    .right-column { order: 2; }
+                    .left-column { order: 1; }
                 }
-                .quick-action-info h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 2px; }
-                .quick-action-info p { font-size: 0.85rem; color: var(--text-muted); }
-                .btn-quick-gasto {
-                    background: var(--text-main);
-                    color: white;
-                    border: none;
-                    padding: 0.75rem 1.25rem;
-                    border-radius: var(--radius-md);
-                    font-weight: 700;
-                    font-size: 0.9rem;
-                    cursor: pointer;
-                    white-space: nowrap;
+
+                .quick-chips-section { display: flex; gap: 0.75rem; overflow-x: auto; padding: 4px 0 1.5rem 0; margin-bottom: 0.5rem; scrollbar-width: none; }
+                .quick-chips-section::-webkit-scrollbar { display: none; }
+                .quick-chip { 
+                    display: flex; align-items: center; gap: 8px; padding: 8px 16px; 
+                    background: white; border: 1px solid var(--accent-soft); border-radius: 20px;
+                    font-size: 0.85rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.2s;
                 }
+                .quick-chip:hover { border-color: var(--accent-medium); background: var(--bg-primary); transform: translateY(-1px); }
+
+                .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+                
                 .selector-modal { text-align: center; }
                 .selector-grid {
                     display: grid;
@@ -356,21 +492,65 @@ const Dashboard: React.FC<DashboardProps> = ({
                 .selector-btn .icon { font-size: 1.5rem; }
                 .selector-btn span:last-child { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
                 
-                .empty-state-mini {
-                    text-align: center;
-                    padding: 1rem;
-                    color: var(--text-muted);
-                }
+                .empty-state-mini { text-align: center; padding: 1rem; color: var(--text-muted); }
                 .btn-small { padding: 0.5rem 1rem; font-size: 0.8rem; height: auto; width: auto; margin-top: 10px; }
-                .disabled { opacity: 0.5; cursor: not-allowed; }
 
-                @media (max-width: 640px) {
-                    .quick-action-block { flex-direction: column; text-align: center; }
-                    .btn-quick-gasto { width: 100%; }
+                .onboarding-block {
+                    margin-bottom: 2.5rem; padding: 2rem; border-radius: var(--radius-lg); text-align: center;
                 }
+                .steps-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; }
+                .step-item { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+                .step-num {
+                    width: 32px; height: 32px; background: var(--accent-soft); color: var(--accent-primary);
+                    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;
+                }
+                .onboarding-actions { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+                .btn-onboarding { padding: 0.85rem 1.75rem; border-radius: var(--radius-md); border: none; font-weight: 700; cursor: pointer; }
+                .btn-onboarding.gasto { background: var(--text-main); color: white; }
+                .btn-onboarding.ingreso { background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--accent-soft); }
+                .btn-onboarding.cuenta { background: transparent; color: var(--text-muted); text-decoration: underline; }
             `}</style>
+
+            {/* Modal Presupuesto Completo */}
+            {isFullBudgetOpen && (
+                <div className="modal-overlay" onClick={() => setIsFullBudgetOpen(false)}>
+                    <div className="modal-content large-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">Presupuesto Detallado</h2>
+                            <button className="close-button" onClick={() => setIsFullBudgetOpen(false)}>&times;</button>
+                        </div>
+                        <div className="modal-body" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                            <BudgetTable
+                                budgets={budgets}
+                                transactions={transactions.filter(t => t.owner === 'Mayra')}
+                                categories={categories}
+                                selectedMonth={selectedMonth}
+                                loans={loans}
+                                installmentPlans={installmentPlans}
+                                kpis={{
+                                    income: monthlyIncome,
+                                    fixed: totalFixedExpenses,
+                                    variable: variableExpenses,
+                                    remaining: remainingAvailable
+                                }}
+                                isDetailedView={true}
+                                onAdd={(catId) => {
+                                    setEditingBudget({ category_id: catId });
+                                    setIsBudgetFormOpen(true);
+                                }}
+                                onEdit={(b) => {
+                                    setEditingBudget(b);
+                                    setIsBudgetFormOpen(true);
+                                }}
+                                onDelete={onDeleteBudget}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
 export default Dashboard;
+

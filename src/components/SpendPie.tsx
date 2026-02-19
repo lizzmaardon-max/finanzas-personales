@@ -40,17 +40,52 @@ const SpendPie: React.FC<SpendPieProps> = ({ transactions, categories }) => {
     return (
         <div className="donut-container">
             {total === 0 ? (
-                <div className="empty-state" style={{ padding: '1.5rem' }}>
+                <div className="empty-state" style={{ padding: '1.5rem', textAlign: 'center' }}>
                     <div style={{
-                        width: '120px',
-                        height: '120px',
+                        width: '80px',
+                        height: '80px',
                         borderRadius: '50%',
-                        border: '8px solid var(--accent-soft)',
+                        border: '6px solid var(--accent-soft)',
                         borderTopColor: 'transparent',
-                        margin: '0 auto 1.5rem',
+                        margin: '0 auto 1.25rem',
                         opacity: 0.3
                     }} />
-                    <p className="empty-text">No hay gastos en este mes.</p>
+                    <p className="empty-text" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                        No hay gastos en este mes.
+                    </p>
+                    <div className="example-chips" style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-light)', marginBottom: '4px' }}>PRUEBA REGISTRAR:</span>
+                        {[
+                            { label: '🛒 Supermercado $25', amount: '25', cat: 'Supermercado' },
+                            { label: '🍕 Comida $10', amount: '10', cat: 'Comida' },
+                            { label: '🚗 Transporte $5', amount: '5', cat: 'Transporte' }
+                        ].map(ex => (
+                            <button
+                                key={ex.label}
+                                className="example-chip-btn"
+                                onClick={() => {
+                                    // Dispatch event to open form with pre-filled data
+                                    const event = new CustomEvent('quick-add-example', {
+                                        detail: { amount: ex.amount, category: ex.cat }
+                                    });
+                                    window.dispatchEvent(event);
+                                }}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '12px',
+                                    border: '1px dashed var(--accent-medium)',
+                                    background: 'var(--bg-primary)',
+                                    fontSize: '0.8rem',
+                                    color: 'var(--text-main)',
+                                    cursor: 'pointer',
+                                    width: '100%',
+                                    maxWidth: '200px'
+                                }}
+                            >
+                                {ex.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             ) : (
                 <div className="pie-layout" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>

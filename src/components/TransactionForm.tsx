@@ -51,6 +51,32 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onClose, onAdd, onUpd
         }
     }, [defaultType, isEditing]);
 
+    useEffect(() => {
+        const handlePrefill = (e: any) => {
+            const catId = e.detail;
+            handleCategoryChange(catId);
+        };
+
+        const handleQuickExample = (e: any) => {
+            const { amount, category } = e.detail;
+            const cat = categories.find(c => c.name.toLowerCase().includes(category.toLowerCase()));
+            setFormData(prev => ({
+                ...prev,
+                type: 'Gasto',
+                amount: amount,
+                categoryId: cat ? cat.id : prev.categoryId,
+                subcategory: cat && cat.subcategories.length > 0 ? cat.subcategories[0] : ''
+            }));
+        };
+
+        window.addEventListener('prefill-category', handlePrefill);
+        window.addEventListener('quick-add-example', handleQuickExample);
+        return () => {
+            window.removeEventListener('prefill-category', handlePrefill);
+            window.removeEventListener('quick-add-example', handleQuickExample);
+        };
+    }, [categories]);
+
     const handleCategoryChange = (catId: string) => {
         const cat = categories.find(c => c.id === catId);
         setFormData({
@@ -142,7 +168,18 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onClose, onAdd, onUpd
                                 step="0.01"
                                 placeholder="0.00"
                                 value={formData.amount}
-                                onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                                onChange={e => {
+                                    const val = e.target.value.replace(/[^\d.]/g, '');
+                                    setFormData({ ...formData, amount: val });
+                                }}
+                                onBlur={() => {
+                                    if (formData.amount && !isNaN(parseFloat(formData.amount))) {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            amount: parseFloat(prev.amount).toFixed(2)
+                                        }));
+                                    }
+                                }}
                                 autoFocus
                                 required
                             />
@@ -253,7 +290,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onClose, onAdd, onUpd
 
                     <div className="modal-actions-piquis">
                         <button type="submit" className="btn-primary main-save">
-                            {isEditing ? 'Actualizar' : 'Guardar Transacción'}
+                            {isEditing ? 'Actualizar' : (formData.type === 'Gasto' ? 'Registrar gasto' : 'Guardar')}
                         </button>
                     </div>
                 </form>

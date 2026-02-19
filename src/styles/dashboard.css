@@ -708,3 +708,66 @@ body {
         }
     }
 }
+
+/* Loans Module Styles */
+.stat-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.loan-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.loan-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.btn-icon {
+    background: var(--accent-soft);
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.btn-icon:hover {
+    background: var(--accent-medium);
+    color: var(--text-main);
+    transform: scale(1.1);
+}
+
+.btn-icon.delete {
+    background: rgba(250, 82, 82, 0.1);
+    color: var(--negative);
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon.delete:hover {
+    background: var(--negative);
+    color: white;
+}
+
+.w-100 {
+    width: 100%;
+}

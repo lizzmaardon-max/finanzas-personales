@@ -141,7 +141,14 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions, cat
                             <div key={t.id} className="transaction-row-piquis" onClick={() => onEdit && onEdit(t)}>
                                 <div className="col-date">{t.date}</div>
                                 <div className="col-category">
-                                    <span className="category-tag-mini">{t.category}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span className="category-tag-mini">{t.category}</span>
+                                        {t.description && (
+                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
+                                                {t.description}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="col-account">
                                     <span className="account-indicator" style={{ borderLeft: `3px solid ${t.cardColor || '#ccc'}` }}>
@@ -185,7 +192,14 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions, cat
                         {filteredTransactions.map((t) => (
                             <div key={t.id} className="transaction-card-mobile glass" onClick={() => onEdit && onEdit(t)}>
                                 <div className="card-top">
-                                    <span className="card-category">{t.category}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        <span className="card-category">{t.category}</span>
+                                        {t.description && (
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                                                {t.description}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className={`card-amount ${t.type?.toLowerCase() === 'ingreso' ? 'positive' :
                                         (t.type?.toLowerCase() === 'transferencia') ? 'neutral' : 'negative'
                                         }`}>

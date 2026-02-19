@@ -5,18 +5,39 @@ interface BudgetTableProps {
     budgets: any[];
     transactions: any[];
     categories: any[];
+    loans: any[];
+    installmentPlans: any[];
+    kpis: {
+        income: number;
+        fixed: number;
+        variable: number;
+        remaining: number;
+    };
     onEdit: (budget: any) => void;
     onDelete: (id: string) => void;
     onAdd: (categoryId: string) => void;
+    onViewFull?: () => void;
     selectedMonth: string;
+    isDetailedView?: boolean;
 }
 
-const BudgetTable: React.FC<BudgetTableProps> = ({ budgets, transactions, categories, onEdit, onDelete, onAdd, selectedMonth }) => {
+const BudgetTable: React.FC<BudgetTableProps> = ({
+    budgets, transactions, categories, loans, installmentPlans, kpis,
+    onEdit, onDelete, onAdd, onViewFull, selectedMonth, isDetailedView = false
+}) => {
+    const [viewMode, setViewMode] = React.useState<'top' | 'all'>(isDetailedView ? 'all' : 'top');
+    const [showFixed, setShowFixed] = React.useState(!isDetailedView); // Expanded by default in desktop/detailed
+
+    // Calculate days remaining in the month
+    const today = new Date();
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const daysRemaining = Math.max(1, lastDayOfMonth - today.getDate());
+    const dailyAvailable = kpis.remaining > 0 ? kpis.remaining / daysRemaining : 0;
+
     // Filter budgets for the selected month and create a lookup map
     const budgetMap = budgets
         .filter(b => b.month === selectedMonth)
         .reduce((acc: any, b) => {
-            // Note: handles both categoryId and category_id due to previous bug
             const catId = b.category_id || b.categoryId;
             if (catId) acc[catId] = b;
             return acc;
@@ -33,102 +54,249 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ budgets, transactions, catego
             return acc;
         }, {});
 
+    const formatCurrency = (val: number) => {
+        return `$${val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    };
+
+    const processedCategories = categories
+        .filter(c => !c.name.toLowerCase().includes('crédito') && !c.name.toLowerCase().includes('tasa cero'))
+        .map(category => {
+            const budget = budgetMap[category.id];
+            const spent = categorySpending[category.id] || 0;
+            const limit = budget ? budget.amount : 0;
+            const percentage = limit > 0 ? (spent / limit) * 100 : 0;
+            return { ...category, budget, spent, limit, percentage };
+        })
+        .sort((a, b) => {
+            // Sort by percentage used first, then by spent amount
+            if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+            return b.spent - a.spent;
+        });
+
+    const isMobile = window.innerWidth < 768;
+    const topCount = isMobile ? 3 : 5;
+    const displayCategories = viewMode === 'top' ? processedCategories.slice(0, topCount) : processedCategories;
+
     return (
-        <div className="budget-container">
-            <div className="budget-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>GESTIÓN POR CATEGORÍA</span>
+        <div className={`budget-v3-container ${isDetailedView ? 'detailed' : ''}`}>
+            {/* 1. Header & KPIs Grid */}
+            {!isDetailedView && <h4 className="v3-title">Presupuesto del mes</h4>}
+
+            <div className="v3-kpi-grid">
+                <div className="v3-kpi-card">
+                    <span className="v3-label">Ingresos</span>
+                    <span className="v3-val income">{formatCurrency(kpis.income)}</span>
+                </div>
+                <div className="v3-kpi-card">
+                    <span className="v3-label">Fijos</span>
+                    <span className="v3-val">{formatCurrency(kpis.fixed)}</span>
+                </div>
+                <div className="v3-kpi-card">
+                    <span className="v3-label">Gastado</span>
+                    <span className="v3-val spent">{formatCurrency(kpis.variable)}</span>
+                </div>
+                <div className="v3-kpi-card relative">
+                    <span className="v3-label">Disponible</span>
+                    <span className={`v3-val ${kpis.remaining < 0 ? 'negative' : 'positive'}`}>
+                        {formatCurrency(kpis.remaining)}
+                    </span>
+                    {kpis.remaining < 0 && <span className="v3-badge">En rojo</span>}
+                </div>
+            </div>
+
+            {dailyAvailable > 0 && kpis.income > 0 && (
+                <div className="v3-daily-info">
+                    Disponible diario: <strong>{formatCurrency(dailyAvailable)}</strong>
+                </div>
+            )}
+
+            {/* 2. Collapsible Fixed Expenses */}
+            <div className="v3-section">
+                <div className="v3-section-header clickable" onClick={() => setShowFixed(!showFixed)}>
+                    <span>Gastos fijos</span>
+                    <span className={`v3-caret ${showFixed ? 'open' : ''}`}>▾</span>
                 </div>
 
-                {categories.map(category => {
-                    const budget = budgetMap[category.id];
-                    const spent = categorySpending[category.id] || 0;
-                    const limit = budget ? budget.amount : 0;
-                    const remaining = limit - spent;
-                    const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
-
-                    // Color logic
-                    const isOver = limit > 0 && spent > limit;
-                    const isWarning = limit > 0 && percentage > 80;
-                    const barColor = isOver ? 'var(--negative)' : (isWarning ? '#ffb946' : '#1dd1a1');
-
-                    return (
-                        <div key={category.id} className="budget-item" style={{ position: 'relative' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'flex-end' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ fontSize: '1.25rem' }}>{category.icon || '📁'}</span>
-                                    <div>
-                                        <h4 style={{ fontSize: '0.9rem', fontWeight: 800, margin: 0 }}>{category.name}</h4>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                            {limit > 0 ? (
-                                                <>
-                                                    {isOver ? 'Excedido por ' : 'Resta '}
-                                                    <strong style={{ color: isOver ? 'var(--negative)' : 'inherit' }}>
-                                                        ${Math.abs(remaining).toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                                                    </strong>
-                                                </>
-                                            ) : (
-                                                'Sin presupuesto definido'
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '0.9rem', fontWeight: 900 }}>
-                                        ${spent.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                                        <span style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem' }}> / ${limit}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
-                                        <button
-                                            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: budget ? 'var(--text-muted)' : 'var(--text-main)' }}
-                                            onClick={() => budget ? onEdit(budget) : onAdd(category.id)}
-                                            title={budget ? "Editar presupuesto" : "Definir presupuesto"}
-                                        >
-                                            {budget ? (
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                                </svg>
-                                            ) : (
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                                </svg>
-                                            )}
-                                        </button>
-                                        {budget && (
-                                            <button
-                                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--negative)', opacity: 0.6 }}
-                                                onClick={() => onDelete(budget.id)}
-                                                title="Eliminar presupuesto"
-                                            >
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                </svg>
-                                            </button>
-                                        )}
-                                    </div>
+                {showFixed && (
+                    <div className="v3-list-rows">
+                        <div className="v3-row">
+                            <div className="v3-row-main">
+                                <span className="v3-icon">💳</span>
+                                <div className="v3-row-info">
+                                    <span className="v3-name">Créditos</span>
+                                    <span className="v3-meta">{loans.length} activos</span>
                                 </div>
                             </div>
-                            <div className="progress-bar-bg" style={{
-                                height: '8px',
-                                backgroundColor: 'var(--accent-soft)',
-                                borderRadius: '4px',
-                                overflow: 'hidden',
-                                opacity: limit > 0 ? 1 : 0.3
-                            }}>
-                                <div className="progress-bar-fill" style={{
-                                    height: '100%',
-                                    width: `${percentage}%`,
-                                    backgroundColor: barColor,
-                                    transition: 'width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                                }} />
-                            </div>
+                            <span className="v3-amount">{formatCurrency(loans.reduce((acc, l) => acc + (parseFloat(l.monthly_installment) || 0), 0))}</span>
                         </div>
-                    );
-                })}
+                        <div className="v3-row">
+                            <div className="v3-row-main">
+                                <span className="v3-icon">🛍️</span>
+                                <div className="v3-row-info">
+                                    <span className="v3-name">Tasa Cero</span>
+                                    <span className="v3-meta">{installmentPlans.filter(p => p.is_active).length} activos</span>
+                                </div>
+                            </div>
+                            <span className="v3-amount">{formatCurrency(installmentPlans.filter(p => p.is_active).reduce((acc, p) => acc + (parseFloat(p.installment_amount) || 0), 0))}</span>
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* 3. Variable Budget Section */}
+            <div className="v3-section">
+                <div className="v3-section-header">
+                    <span>Presupuesto</span>
+                    {!isMobile && !isDetailedView && (
+                        <div className="v3-segmented-control">
+                            <button className={viewMode === 'top' ? 'active' : ''} onClick={() => setViewMode('top')}>TOP {topCount}</button>
+                            <button className={viewMode === 'all' ? 'active' : ''} onClick={() => setViewMode('all')}>Todas</button>
+                        </div>
+                    )}
+                </div>
+
+                <div className="v3-list-rows">
+                    {displayCategories.map(cat => {
+                        const isOver = cat.limit > 0 && cat.spent > cat.limit;
+                        const isWarning = cat.limit > 0 && cat.percentage > 80;
+                        const barColor = isOver ? '#e74c3c' : (isWarning ? '#f39c12' : '#27ae60');
+
+                        return (
+                            <div key={cat.id} className="v3-row v3-budget-row">
+                                <div className="v3-row-main">
+                                    <span className="v3-icon">{cat.icon || '📁'}</span>
+                                    <div className="v3-row-content">
+                                        <div className="v3-row-top">
+                                            <span className="v3-name">{cat.name}</span>
+                                            <div className="v3-row-values">
+                                                <span className="v3-spent">{formatCurrency(cat.spent)}</span>
+                                                <span className="v3-divider">/</span>
+                                                <span className="v3-limit">{cat.limit > 0 ? formatCurrency(cat.limit) : '—'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="v3-progress-container">
+                                            <div className="v3-progress-bg">
+                                                <div
+                                                    className="v3-progress-fill"
+                                                    style={{
+                                                        width: `${Math.min(cat.percentage, 100)}%`,
+                                                        backgroundColor: barColor
+                                                    }}
+                                                />
+                                            </div>
+                                            {cat.limit === 0 && (
+                                                <button className="v3-link-btn" onClick={() => onAdd(cat.id)}>Definir</button>
+                                            )}
+                                            {cat.limit > 0 && (
+                                                <div className="v3-row-actions-mini">
+                                                    <button className="v3-icon-btn" onClick={() => onEdit(cat.budget)}>✎</button>
+                                                    <button className="v3-icon-btn del" onClick={() => onDelete(cat.budget.id)}>&times;</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {viewMode === 'top' && processedCategories.length > topCount && (
+                    <button className="v3-full-btn" onClick={() => onViewFull ? onViewFull() : setViewMode('all')}>
+                        Ver presupuesto completo
+                    </button>
+                )}
+            </div>
+
+            <style>{`
+                .budget-v3-container { display: flex; flex-direction: column; gap: 12px; color: var(--text-main); }
+                .v3-title { font-size: 0.8rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 0; }
+                
+                /* KPIs Grid */
+                .v3-kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+                .v3-kpi-card { 
+                    background: white; border: 1px solid var(--accent-soft); border-radius: 12px; 
+                    padding: 8px 12px; display: flex; flex-direction: column; height: 56px; justify-content: center;
+                }
+                .v3-label { font-size: 0.6rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+                .v3-val { font-size: 0.95rem; font-weight: 900; letter-spacing: -0.02em; }
+                .v3-val.income { color: #2ecc71; }
+                .v3-val.spent { color: var(--text-muted); }
+                .v3-val.positive { color: #2ecc71; }
+                .v3-val.negative { color: #e74c3c; }
+                
+                .v3-badge { 
+                    position: absolute; top: 6px; right: 8px; background: rgba(231, 76, 60, 0.1); 
+                    color: #e74c3c; font-size: 0.5rem; font-weight: 900; padding: 2px 5px; border-radius: 4px; text-transform: uppercase;
+                }
+                .relative { position: relative; }
+
+                .v3-daily-info { 
+                    font-size: 0.7rem; color: var(--text-muted); background: var(--bg-primary); 
+                    padding: 6px 12px; border-radius: 8px; align-self: flex-start;
+                }
+
+                /* Sections */
+                .v3-section { display: flex; flex-direction: column; gap: 8px; }
+                .v3-section-header { 
+                    display: flex; justify-content: space-between; align-items: center; 
+                    font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);
+                }
+                .v3-section-header.clickable { cursor: pointer; }
+                .v3-caret { transition: transform 0.2s; font-size: 1rem; }
+                .v3-caret.open { transform: rotate(180deg); }
+
+                /* List Rows */
+                .v3-list-rows { display: flex; flex-direction: column; background: white; border: 1px solid var(--accent-soft); border-radius: 12px; overflow: hidden; }
+                .v3-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--bg-primary); min-height: 44px; }
+                .v3-row:last-child { border-bottom: none; }
+                .v3-row-main { display: flex; align-items: center; gap: 10px; flex: 1; }
+                .v3-icon { font-size: 1.1rem; }
+                .v3-row-info { display: flex; flex-direction: column; }
+                .v3-name { font-size: 0.8rem; font-weight: 800; color: var(--text-main); }
+                .v3-meta { font-size: 0.65rem; color: var(--text-muted); }
+                .v3-amount { font-size: 0.85rem; font-weight: 850; }
+
+                /* Budget Row Specifics */
+                .v3-budget-row { min-height: 48px; padding: 6px 12px; }
+                .v3-row-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+                .v3-row-top { display: flex; justify-content: space-between; align-items: center; }
+                .v3-row-values { font-size: 0.7rem; font-weight: 800; }
+                .v3-divider { margin: 0 2px; color: var(--accent-medium); }
+                .v3-limit { color: var(--text-muted); font-size: 0.65rem; }
+                
+                .v3-progress-container { display: flex; align-items: center; gap: 8px; width: 100%; }
+                .v3-progress-bg { flex: 1; height: 3px; background: var(--bg-primary); border-radius: 2px; overflow: hidden; }
+                .v3-progress-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease-out; }
+                
+                .v3-link-btn { background: none; border: none; color: var(--text-muted); font-size: 0.6rem; font-weight: 800; text-decoration: underline; cursor: pointer; padding: 0; }
+                .v3-row-actions-mini { display: flex; gap: 6px; }
+                .v3-icon-btn { background: none; border: none; font-size: 0.7rem; color: var(--text-muted); cursor: pointer; padding: 0 4px; border-radius: 4px; }
+                .v3-icon-btn:hover { background: var(--bg-primary); }
+                .v3-icon-btn.del { color: #e74c3c; font-size: 0.9rem; }
+
+                /* Controls */
+                .v3-segmented-control { display: flex; background: var(--bg-primary); padding: 2px; border-radius: 8px; }
+                .v3-segmented-control button { 
+                    border: none; background: none; font-size: 0.55rem; font-weight: 800; padding: 3px 8px; 
+                    border-radius: 6px; cursor: pointer; color: var(--text-muted);
+                }
+                .v3-segmented-control button.active { background: white; color: var(--text-main); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+                
+                .v3-full-btn { 
+                    margin-top: 4px; background: var(--bg-primary); border: 1px solid var(--accent-soft); 
+                    color: var(--text-main); padding: 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; 
+                    cursor: pointer; transition: all 0.2s;
+                }
+                .v3-full-btn:hover { background: white; border-color: var(--accent-medium); }
+
+                @media (max-width: 768px) {
+                    .v3-kpi-grid { gap: 6px; }
+                    .v3-kpi-card { padding: 6px 10px; height: 52px; }
+                    .v3-list-rows { border-radius: 16px; }
+                    .v3-row { padding: 12px; }
+                }
+            `}</style>
         </div>
     );
 };

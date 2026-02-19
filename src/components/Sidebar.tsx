@@ -24,7 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
         },
         {
             id: 'categorias',
-            label: 'Etiquetas',
+            label: 'Categorías',
             icon: <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         },
         {
@@ -36,6 +36,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
             id: 'tasa-cero',
             label: 'Tasa Cero',
             icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        },
+        {
+            id: 'creditos',
+            label: 'Créditos',
+            icon: <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         }
     ];
 

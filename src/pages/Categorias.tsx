@@ -82,7 +82,7 @@ const Categorias: React.FC<CategoriasProps> = ({ categories, onUpdate }) => {
             <header className="header">
                 <div className="header-info">
                     <h1>Categorías</h1>
-                    <p className="header-subtitle">Organiza tus gastos con etiquetas personalizadas</p>
+                    <p className="header-subtitle">Organiza tus gastos con categorías personalizadas</p>
                 </div>
                 <button className="btn-add" onClick={() => setShowCatForm(true)}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

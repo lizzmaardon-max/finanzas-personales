@@ -6,6 +6,7 @@ import Cuentas from './pages/Cuentas';
 import Categorias from './pages/Categorias';
 import BabySection from './pages/BabySection';
 import Installments from './pages/Installments';
+import Loans from './pages/Loans';
 import { supabase } from './lib/supabase';
 import './styles/dashboard.css';
 
@@ -18,6 +19,8 @@ const App: React.FC = () => {
     const [categories, setCategories] = useState<any[]>([]);
     const [budgets, setBudgets] = useState<any[]>([]);
     const [installmentPlans, setInstallmentPlans] = useState<any[]>([]);
+    const [loans, setLoans] = useState<any[]>([]);
+    const [loanPayments, setLoanPayments] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -120,6 +123,24 @@ const App: React.FC = () => {
                 await processDueInstallments(plansData);
             }
 
+            // Fetch Loans
+            const { data: loansData } = await supabase
+                .from('loans')
+                .select('*')
+                .eq('user_id', MOCK_USER_ID);
+            setLoans(loansData || []);
+
+            // Fetch Loan Payments
+            if (loansData && loansData.length > 0) {
+                const { data: paymentsData } = await supabase
+                    .from('loan_payments')
+                    .select('*')
+                    .in('loan_id', loansData.map(l => l.id));
+                setLoanPayments(paymentsData || []);
+            } else {
+                setLoanPayments([]);
+            }
+
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -170,6 +191,7 @@ const App: React.FC = () => {
                 const transaction = {
                     accountId: plan.account_id,
                     categoryId: plan.category_id,
+                    subcategory: plan.subcategory || null,
                     amount: plan.installment_amount.toString(),
                     type: 'Gasto',
                     date: now.toISOString().split('T')[0],
@@ -223,6 +245,20 @@ const App: React.FC = () => {
         await fetchData();
     };
 
+    const updateInstallmentPlan = async (id: string, plan: any) => {
+        const { error } = await supabase
+            .from('installment_plans')
+            .update(plan)
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error updating plan:', error);
+            alert('Error al actualizar el plan: ' + error.message);
+            return;
+        }
+        await fetchData();
+    };
+
     const deleteInstallmentPlan = async (id: string) => {
         if (!window.confirm('¿Estás seguro de eliminar este plan? No se borrarán las transacciones ya registradas.')) return;
 
@@ -251,10 +287,12 @@ const App: React.FC = () => {
             user_id: MOCK_USER_ID,
             account_id: t.accountId || null,
             category_id: t.categoryId,
+            subcategory: t.subcategory || null,
+            loan_payment_id: t.loanPaymentId || null,
             amount: amountNum,
             type: dbType,
             date: t.date,
-            description: t.subcategory ? `${t.categoryName}: ${t.subcategory}` : (t.description || t.categoryName),
+            description: t.description || t.categoryName,
             destination_account_id: (t.type === 'Transferencia') ? t.destinationAccountId : null
         };
 
@@ -350,6 +388,18 @@ const App: React.FC = () => {
             console.error('Error deleting transaction:', error);
             alert('Error al eliminar: ' + error.message);
             return;
+        }
+
+        // If it was a loan payment, delete that too
+        if (tx.loan_payment_id) {
+            const { error: loanPaymentError } = await supabase
+                .from('loan_payments')
+                .delete()
+                .eq('id', tx.loan_payment_id);
+
+            if (loanPaymentError) {
+                console.error('Error deleting associated loan payment:', loanPaymentError);
+            }
         }
 
         // Reverse balance update
@@ -503,6 +553,113 @@ const App: React.FC = () => {
         }
     };
 
+    // --- Loan Helpers ---
+    const addLoan = async (loan: any) => {
+        const { error } = await supabase
+            .from('loans')
+            .insert([{ ...loan, user_id: MOCK_USER_ID }]);
+
+        if (error) {
+            console.error('Error adding loan:', error);
+            return;
+        }
+        await fetchData();
+    };
+
+    const updateLoan = async (id: string, loan: any) => {
+        const { error } = await supabase
+            .from('loans')
+            .update(loan)
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error updating loan:', error);
+            return;
+        }
+        await fetchData();
+    };
+
+    const deleteLoan = async (id: string) => {
+        if (!window.confirm('¿Eliminar este crédito?')) return;
+        const { error } = await supabase.from('loans').delete().eq('id', id);
+        if (error) console.error('Error deleting loan:', error);
+        else await fetchData();
+    };
+
+    const addLoanPayment = async (loanId: string, payment: any) => {
+        const { data: paymentData, error } = await supabase
+            .from('loan_payments')
+            .insert([{ ...payment, loan_id: loanId }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error adding loan payment:', error);
+            return;
+        }
+
+        // Automatic transaction creation
+        const loan = loans.find(l => l.id === loanId);
+        await addTransaction({
+            accountId: loan?.account_id || accounts[0]?.id,
+            categoryId: loan?.category_id || (categories.find(c => c.name === 'Créditos')?.id) || categories[0]?.id,
+            subcategory: loan?.subcategory || 'Personal',
+            loanPaymentId: paymentData.id,
+            amount: payment.amount_paid.toString(),
+            type: 'Gasto',
+            date: payment.payment_date,
+            description: `Pago Crédito: ${loan?.name}${payment.is_installment ? ' (Cuota)' : ''}`
+        });
+
+        await fetchData();
+    };
+
+    const deleteLoanPayment = async (paymentId: string) => {
+        if (!window.confirm('¿Eliminar este pago? Se borrará también del historial de transacciones.')) return;
+
+        const { error } = await supabase
+            .from('loan_payments')
+            .delete()
+            .eq('id', paymentId);
+
+        if (error) {
+            console.error('Error deleting loan payment:', error);
+            alert('Error al eliminar el pago: ' + error.message);
+            return;
+        }
+
+        await fetchData();
+    };
+
+    const updateLoanPayment = async (paymentId: string, payment: any) => {
+        // 1. Update loan_payment
+        const { error: payError } = await supabase
+            .from('loan_payments')
+            .update(payment)
+            .eq('id', paymentId);
+
+        if (payError) {
+            console.error('Error updating payment:', payError);
+            alert('Error al actualizar el pago: ' + payError.message);
+            return;
+        }
+
+        // 2. Update transaction
+        const { error: txError } = await supabase
+            .from('transactions')
+            .update({
+                amount: parseFloat(payment.amount_paid),
+                date: payment.payment_date
+            })
+            .eq('loan_payment_id', paymentId);
+
+        if (txError) {
+            console.error('Error updating associated transaction:', txError);
+        }
+
+        await fetchData();
+    };
+
     const renderPage = () => {
         if (isLoading) {
             return (
@@ -520,12 +677,15 @@ const App: React.FC = () => {
                         accounts={accounts}
                         categories={categories}
                         budgets={budgets}
+                        loans={loans}
+                        installmentPlans={installmentPlans}
                         onAddTransaction={addTransaction}
                         onUpdateTransaction={updateTransaction}
                         onDeleteTransaction={deleteTransaction}
                         onAddBudget={addBudget}
                         onUpdateBudget={updateBudget}
                         onDeleteBudget={deleteBudget}
+                        onNavigate={setCurrentPage}
                     />
                 );
             case 'transacciones':
@@ -572,7 +732,23 @@ const App: React.FC = () => {
                         accounts={accounts}
                         categories={categories}
                         onAddPlan={addInstallmentPlan}
+                        onUpdatePlan={updateInstallmentPlan}
                         onDeletePlan={deleteInstallmentPlan}
+                    />
+                );
+            case 'creditos':
+                return (
+                    <Loans
+                        loans={loans}
+                        payments={loanPayments}
+                        accounts={accounts}
+                        categories={categories}
+                        onAddLoan={addLoan}
+                        onUpdateLoan={updateLoan}
+                        onDeleteLoan={deleteLoan}
+                        onAddPayment={addLoanPayment}
+                        onUpdatePayment={updateLoanPayment}
+                        onDeletePayment={deleteLoanPayment}
                     />
                 );
             default:
@@ -582,12 +758,15 @@ const App: React.FC = () => {
                         accounts={accounts}
                         categories={categories}
                         budgets={budgets}
+                        loans={loans}
+                        installmentPlans={installmentPlans}
                         onAddTransaction={addTransaction}
                         onUpdateTransaction={updateTransaction}
                         onDeleteTransaction={deleteTransaction}
                         onAddBudget={addBudget}
                         onUpdateBudget={updateBudget}
                         onDeleteBudget={deleteBudget}
+                        onNavigate={setCurrentPage}
                     />
                 );
         }
@@ -640,7 +819,7 @@ const App: React.FC = () => {
                         <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
                         <line x1="7" y1="7" x2="7.01" y2="7"></line>
                     </svg>
-                    <span>Etiquetas</span>
+                    <span>Categorías</span>
                 </button>
                 <button
                     className={`nav-item ${currentPage === 'tasa-cero' ? 'active' : ''}`}
@@ -650,6 +829,15 @@ const App: React.FC = () => {
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                     </svg>
                     <span>Tasa 0</span>
+                </button>
+                <button
+                    className={`nav-item ${currentPage === 'creditos' ? 'active' : ''}`}
+                    onClick={() => setCurrentPage('creditos')}
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                    <span>Créditos</span>
                 </button>
             </nav>
 

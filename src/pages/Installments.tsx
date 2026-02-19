@@ -12,6 +12,7 @@ interface InstallmentPlan {
     payment_day: number;
     account_id: string;
     category_id: string;
+    subcategory: string;
     is_active: boolean;
 }
 
@@ -20,50 +21,86 @@ interface InstallmentsProps {
     accounts: any[];
     categories: any[];
     onAddPlan: (plan: any) => Promise<void>;
+    onUpdatePlan: (id: string, plan: any) => Promise<void>;
     onDeletePlan: (id: string) => Promise<void>;
 }
 
-const Installments: React.FC<InstallmentsProps> = ({ plans, accounts, categories, onAddPlan, onDeletePlan }) => {
+const Installments: React.FC<InstallmentsProps> = ({ plans, accounts, categories, onAddPlan, onUpdatePlan, onDeletePlan }) => {
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [planToEdit, setPlanToEdit] = useState<InstallmentPlan | null>(null);
     const [formData, setFormData] = useState({
         description: '',
         total_amount: '',
         total_installments: '12',
         payment_day: '3',
         account_id: '',
-        category_id: ''
+        category_id: '',
+        subcategory: ''
     });
+
+    const selectedCategory = categories.find(c => c.id === formData.category_id);
+    const subcategories = selectedCategory?.subcategories || [];
+
+    const handleOpenForm = (plan?: InstallmentPlan) => {
+        if (plan) {
+            setPlanToEdit(plan);
+            setFormData({
+                description: plan.description,
+                total_amount: plan.total_amount.toString(),
+                total_installments: plan.total_installments.toString(),
+                payment_day: plan.payment_day.toString(),
+                account_id: plan.account_id,
+                category_id: plan.category_id,
+                subcategory: plan.subcategory || ''
+            });
+        } else {
+            setPlanToEdit(null);
+            setFormData({
+                description: '',
+                total_amount: '',
+                total_installments: '12',
+                payment_day: '3',
+                account_id: accounts[0]?.id || '',
+                category_id: categories.find(c => c.name.toLowerCase().includes('compras'))?.id || categories[0]?.id || '',
+                subcategory: ''
+            });
+        }
+        setIsFormOpen(true);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const installmentAmount = parseFloat(formData.total_amount) / parseInt(formData.total_installments);
 
-        await onAddPlan({
+        const planData = {
             ...formData,
             total_amount: parseFloat(formData.total_amount),
-            remaining_amount: parseFloat(formData.total_amount),
             total_installments: parseInt(formData.total_installments),
             payment_day: parseInt(formData.payment_day),
             installment_amount: installmentAmount,
-            start_date: new Date().toISOString().split('T')[0]
-        });
+        };
+
+        if (planToEdit) {
+            await onUpdatePlan(planToEdit.id, planData);
+        } else {
+            await onAddPlan({
+                ...planData,
+                remaining_amount: planData.total_amount,
+                completed_installments: 0,
+                is_active: true,
+                start_date: new Date().toISOString().split('T')[0]
+            });
+        }
 
         setIsFormOpen(false);
-        setFormData({
-            description: '',
-            total_amount: '',
-            total_installments: '12',
-            payment_day: '3',
-            account_id: '',
-            category_id: ''
-        });
+        setPlanToEdit(null);
     };
 
     return (
         <div className="main-content">
             <header className="header">
                 <h1>Compras Tasa Cero</h1>
-                <button className="btn btn-primary" onClick={() => setIsFormOpen(true)}>
+                <button className="btn btn-primary" onClick={() => handleOpenForm()}>
                     + Nuevo Plan
                 </button>
             </header>
@@ -72,7 +109,7 @@ const Installments: React.FC<InstallmentsProps> = ({ plans, accounts, categories
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <header className="modal-header">
-                            <h2>Nuevo Plan Tasa Cero</h2>
+                            <h2>{planToEdit ? 'Editar Plan' : 'Nuevo Plan Tasa Cero'}</h2>
                             <button className="btn-close" onClick={() => setIsFormOpen(false)}>&times;</button>
                         </header>
                         <form onSubmit={handleSubmit}>
@@ -137,7 +174,15 @@ const Installments: React.FC<InstallmentsProps> = ({ plans, accounts, categories
                                 <label>Categoría</label>
                                 <select
                                     value={formData.category_id}
-                                    onChange={e => setFormData({ ...formData, category_id: e.target.value })}
+                                    onChange={e => {
+                                        const catId = e.target.value;
+                                        const cat = categories.find(c => c.id === catId);
+                                        setFormData({
+                                            ...formData,
+                                            category_id: catId,
+                                            subcategory: cat?.subcategories?.[0] || ''
+                                        });
+                                    }}
                                     required
                                 >
                                     <option value="">Seleccionar...</option>
@@ -146,9 +191,26 @@ const Installments: React.FC<InstallmentsProps> = ({ plans, accounts, categories
                                     ))}
                                 </select>
                             </div>
+
+                            {subcategories.length > 0 && (
+                                <div className="form-group">
+                                    <label>Subcategoría</label>
+                                    <select
+                                        value={formData.subcategory}
+                                        onChange={e => setFormData({ ...formData, subcategory: e.target.value })}
+                                    >
+                                        {subcategories.map((s: string) => (
+                                            <option key={s} value={s}>{s}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
                             <div className="modal-actions">
                                 <button type="button" className="btn btn-secondary" onClick={() => setIsFormOpen(false)}>Cancelar</button>
-                                <button type="submit" className="btn btn-primary">Crear Plan</button>
+                                <button type="submit" className="btn btn-primary">
+                                    {planToEdit ? 'Guardar Cambios' : 'Crear Plan'}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -174,12 +236,20 @@ const Installments: React.FC<InstallmentsProps> = ({ plans, accounts, categories
                                         <span className="badge-quote" style={{ marginBottom: '0.5rem' }}>Tasa Cero</span>
                                         <h3 style={{ fontWeight: 800, fontSize: '1.2rem', margin: 0 }}>{plan.description}</h3>
                                     </div>
-                                    <button className="btn-icon delete" onClick={() => onDeletePlan(plan.id)} style={{ padding: '8px' }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        </svg>
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                        <button className="btn-icon" onClick={() => handleOpenForm(plan)} style={{ padding: '8px' }}>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                        </button>
+                                        <button className="btn-icon delete" onClick={() => onDeletePlan(plan.id)} style={{ padding: '8px' }}>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="plan-details-piquis">
