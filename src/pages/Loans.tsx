@@ -89,7 +89,11 @@ const Loans: React.FC<LoansProps> = ({
                 </button>
             </header>
 
-            <div className="loans-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+            <div className="dashboard-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                gap: '8px'
+            }}>
                 {loans.map(loan => {
                     const summary = calculateLoanSummary(loan);
                     const isHistoryVisible = viewHistory === loan.id;

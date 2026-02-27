@@ -217,7 +217,11 @@ const Installments: React.FC<InstallmentsProps> = ({ plans, accounts, categories
                 </div>
             )}
 
-            <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
+            <div className="dashboard-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                gap: '8px'
+            }}>
                 {plans.length === 0 ? (
                     <div className="empty-state section-card" style={{ gridColumn: '1 / -1' }}>
                         <div className="empty-icon">📂</div>

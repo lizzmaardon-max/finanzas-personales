@@ -233,7 +233,11 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, onAdd, onUpda
                 </button>
             </header>
 
-            <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+            <div className="dashboard-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                gap: '8px'
+            }}>
                 {accounts.length === 0 ? (
                     <div className="empty-state section-card">
                         <div className="empty-icon">📂</div>
