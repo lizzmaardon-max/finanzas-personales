@@ -89,15 +89,16 @@ const Dashboard: React.FC<DashboardProps> = ({
             return acc;
         }, 0);
 
-    const totalBalance = accountSum;
-    const initialBalance = accountSum - netChangeSinceSelectedMonth;
+    const totalTasaCeroDebt = (installmentPlans || []).filter(p => p.is_active).reduce((acc, p) => acc + (parseFloat(p.remaining_amount) || 0), 0);
+    const totalBalance = accountSum - totalTasaCeroDebt;
+    const initialBalance = (accountSum - netChangeSinceSelectedMonth) - totalTasaCeroDebt;
 
     const totalDebt = accounts
         .filter(a => a.type === 'Tarjeta de Crédito')
         .reduce((acc, a) => {
             const val = parseFloat(a.balance.toString().replace(/[^\d.-]/g, ''));
             return val < 0 ? acc + Math.abs(val) : acc;
-        }, 0);
+        }, 0) + (installmentPlans || []).filter(p => p.is_active).reduce((acc, p) => acc + (parseFloat(p.remaining_amount) || 0), 0);
 
     const totalSavings = accounts
         .filter(a => a.type === 'Ahorro')

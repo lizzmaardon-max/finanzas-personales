@@ -718,6 +718,7 @@ const App: React.FC = () => {
                     <Cuentas
                         accounts={accounts}
                         transactions={transactions}
+                        installmentPlans={installmentPlans}
                         onAdd={addAccount}
                         onUpdate={updateAccount}
                         onDelete={deleteAccount}

@@ -7,9 +7,10 @@ interface CuentasProps {
     onAdd: (a: any) => void;
     onUpdate: (a: any) => void;
     onDelete: (id: any) => void;
+    installmentPlans: any[];
 }
 
-const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, onAdd, onUpdate, onDelete }) => {
+const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPlans, onAdd, onUpdate, onDelete }) => {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<any>(null);
     const [formData, setFormData] = useState({
@@ -173,10 +174,28 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, onAdd, onUpda
                                 <span style={{ color: 'var(--text-muted)' }}>Límite</span>
                                 <span style={{ fontWeight: 600 }}>${Number(a.credit_limit).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                             </div>
+                            {/* Tasa Cero integration */}
+                            {(() => {
+                                const relatedPlans = (installmentPlans || []).filter(p => p.account_id === a.id && p.is_active);
+                                const totalTasaCeroDebt = relatedPlans.reduce((sum, p) => sum + (parseFloat(p.remaining_amount) || 0), 0);
+                                if (totalTasaCeroDebt <= 0) return null;
+                                return (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--accent-primary)', marginTop: '2px' }}>
+                                        <span>Tasa Cero pend.</span>
+                                        <span style={{ fontWeight: 700 }}>-${totalTasaCeroDebt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                );
+                            })()}
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '2px' }}>
                                 <span style={{ color: 'var(--text-muted)' }}>Disponible</span>
                                 <span style={{ fontWeight: 700, color: 'var(--positive)' }}>
-                                    ${Math.max(0, Number(a.credit_limit) + parseFloat(a.balance.toString().replace(/[^\d.-]/g, ''))).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                    {(() => {
+                                        const relatedPlans = (installmentPlans || []).filter(p => p.account_id === a.id && p.is_active);
+                                        const totalTasaCeroDebt = relatedPlans.reduce((sum, p) => sum + (parseFloat(p.remaining_amount) || 0), 0);
+                                        const currentBalance = parseFloat(a.balance.toString().replace(/[^\d.-]/g, ''));
+                                        const available = Math.max(0, Number(a.credit_limit) + currentBalance - totalTasaCeroDebt);
+                                        return `$${available.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                                    })()}
                                 </span>
                             </div>
                         </div>
