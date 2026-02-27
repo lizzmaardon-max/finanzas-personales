@@ -22,6 +22,7 @@ const App: React.FC = () => {
     const [loans, setLoans] = useState<any[]>([]);
     const [loanPayments, setLoanPayments] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -46,7 +47,8 @@ const App: React.FC = () => {
                     type: a.type === 'credito' ? 'Tarjeta de Crédito' :
                         a.type === 'efectivo' ? 'Efectivo' :
                             (a.type === 'banco' && isAhorro) ? 'Ahorro' :
-                                a.type === 'banco' ? 'Cuenta de Ahorro' : 'Billetera Digital'
+                                a.type === 'banco' ? 'Cuenta de Ahorro' : 'Billetera Digital',
+                    credit_limit: parseFloat(a.credit_limit || 0)
                 };
             }) : [];
             setAccounts(cleanedAccounts);
@@ -135,14 +137,22 @@ const App: React.FC = () => {
                 const { data: paymentsData } = await supabase
                     .from('loan_payments')
                     .select('*')
-                    .in('loan_id', loansData.map(l => l.id));
+                    .in('loan_id', loansData.map((l: any) => l.id));
                 setLoanPayments(paymentsData || []);
+                console.log('Loan payments fetched:', paymentsData?.length);
             } else {
                 setLoanPayments([]);
             }
 
-        } catch (error) {
+            console.log('--- DATA FETCH COMPLETE ---');
+            console.log('Accounts:', cleanedAccounts.length);
+            console.log('Transactions:', transactionsData?.length);
+            console.log('Categories:', finalCategories.length);
+            console.log('--- DATA FETCH COMPLETE ---');
+        } catch (error: any) {
             console.error('Error fetching data:', error);
+            const msg = error.message || 'Error de conexión';
+            setError(msg);
         } finally {
             setIsLoading(false);
         }
@@ -443,7 +453,8 @@ const App: React.FC = () => {
             balance: parseFloat(a.balance.toString().replace('$', '').replace(',', '')) || 0,
             bank: a.bank || '',
             color: a.color || '#f9a8a8',
-            last4: a.last4 || ''
+            last4: a.last4 || '',
+            credit_limit: parseFloat(a.credit_limit) || 0
         };
 
         const { data, error } = await supabase
@@ -462,7 +473,8 @@ const App: React.FC = () => {
             const adapted = {
                 ...data,
                 balance: `${data.balance < 0 ? '-' : ''}$${Math.abs(data.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                type: a.type // Keep original UI type label
+                type: a.type, // Keep original UI type label
+                credit_limit: parseFloat(data.credit_limit || 0)
             };
             setAccounts([...accounts, adapted]);
         }
@@ -481,17 +493,18 @@ const App: React.FC = () => {
                 balance: parseFloat(updated.balance.replace('$', '').replace(',', '')) || 0,
                 bank: updated.bank || '',
                 color: updated.color || '#f9a8a8',
-                last4: updated.last4 || ''
+                last4: updated.last4 || '',
+                credit_limit: parseFloat(updated.credit_limit) || 0
             })
             .eq('id', updated.id);
 
-        if (error) {
+        if (!error) {
+            setAccounts(accounts.map(acc => acc.id === updated.id ? { ...acc, ...updated, credit_limit: parseFloat(updated.credit_limit) || 0 } : acc));
+        } else {
             console.error('Error updating account:', error);
             alert('Error al actualizar la cuenta: ' + error.message);
             return;
         }
-
-        setAccounts(accounts.map(a => a.id === updated.id ? updated : a));
     };
 
     const deleteAccount = async (id: string) => {
@@ -548,6 +561,7 @@ const App: React.FC = () => {
             await fetchData();
         } catch (error: any) {
             console.error('Error syncing categories:', error);
+            alert('Error al sincronizar categorías: ' + (error.message || 'Error desconocido'));
         } finally {
             setIsLoading(false);
         }
@@ -561,6 +575,7 @@ const App: React.FC = () => {
 
         if (error) {
             console.error('Error adding loan:', error);
+            alert('Error al guardar el préstamo: ' + error.message);
             return;
         }
         await fetchData();
@@ -770,10 +785,45 @@ const App: React.FC = () => {
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '20px' }}>
+                <div className="loading-spinner"></div>
+                <p style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Cargando tus finanzas...</p>
+                <div style={{ fontSize: '0.8rem', color: '#ccc' }}>ID: {MOCK_USER_ID}</div>
+            </div>
+        );
+    }
+
     return (
         <div className="app-container">
             <Sidebar activePage={currentPage} onNavigate={setCurrentPage} />
-            {renderPage()}
+
+
+
+            {error && (
+                <div style={{
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    backgroundColor: '#ff5252',
+                    color: 'white',
+                    padding: '12px 20px',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                    zIndex: 10000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px'
+                }}>
+                    <span>⚠️ {error}</span>
+                    <button onClick={() => { setError(null); fetchData(); }} style={{ background: 'white', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '0.8rem', cursor: 'pointer' }}>Reintentar</button>
+                </div>
+            )}
+
+            <main className="main-content">
+                {renderPage()}
+            </main>
 
             <nav className="bottom-nav mobile-only glass">
                 <button

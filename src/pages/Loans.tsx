@@ -95,99 +95,105 @@ const Loans: React.FC<LoansProps> = ({
                     const isHistoryVisible = viewHistory === loan.id;
 
                     return (
-                        <div key={loan.id} className="card glass loan-card" style={{ padding: '24px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>{loan.name}</h3>
-                                    <span className="badge-quote">ID: {loan.id.slice(0, 4)}</span>
+                        <div
+                            key={loan.id}
+                            className="card glass loan-card"
+                            style={{
+                                padding: '0.75rem',
+                                background: `linear-gradient(135deg, #ffffff 0%, var(--accent-primary)08 100%)`,
+                                borderLeft: `5px solid var(--accent-primary)`,
+                                borderRadius: '1.25rem'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>{loan.name}</h3>
+                                    <span className="badge-quote" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>ID: {loan.id.slice(0, 4)}</span>
                                 </div>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button className="btn-icon" title="Editar" onClick={() => { setLoanToEdit(loan); setIsLoanFormOpen(true); }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                    <button className="btn-icon" title="Editar" onClick={() => { setLoanToEdit(loan); setIsLoanFormOpen(true); }} style={{ padding: '4px' }}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     </button>
-                                    <button className="btn-icon delete" title="Eliminar" onClick={() => onDeleteLoan(loan.id)}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    <button className="btn-icon delete" title="Eliminar" onClick={() => onDeleteLoan(loan.id)} style={{ padding: '4px' }}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="loan-stats-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+                            <div className="loan-stats-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
                                 <div className="stat-mini">
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Saldo Capital</span>
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--accent-primary)' }}>{formatCurrency(summary.remainingCapital)}</div>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Saldo Capital</span>
+                                    <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent-primary)' }}>{formatCurrency(summary.remainingCapital)}</div>
                                 </div>
                                 <div className="stat-mini">
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Cuotas Restantes</span>
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 800 }}>{summary.remainingInstallments} / {loan.total_installments}</div>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Cuotas</span>
+                                    <div style={{ fontSize: '1rem', fontWeight: 800 }}>{summary.remainingInstallments}/{loan.total_installments}</div>
                                 </div>
                                 <div className="stat-mini">
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Tiempo Est.</span>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{summary.timeRemaining}</div>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Estimado</span>
+                                    <div style={{ fontSize: '0.8rem', fontWeight: 700 }}>{summary.timeRemaining}</div>
                                 </div>
                                 <div className="stat-mini">
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Pago Capital</span>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--positive)' }}>{formatCurrency(summary.totalPrincipalPaid)}</div>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Pagado Cap.</span>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--positive)' }}>{formatCurrency(summary.totalPrincipalPaid)}</div>
                                 </div>
                                 <div className="stat-mini">
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Pago Interés</span>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--negative)' }}>{formatCurrency(summary.totalInterestPaid)}</div>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Pagado Int.</span>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--negative)' }}>{formatCurrency(summary.totalInterestPaid)}</div>
                                 </div>
                                 <div className="stat-mini">
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Pago Otros</span>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{formatCurrency(summary.totalOthersPaid)}</div>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase' }}>Pagado Otros</span>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{formatCurrency(summary.totalOthersPaid)}</div>
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-                                <button className="btn-primary w-100" onClick={() => { setSelectedLoan(loan); setIsPaymentFormOpen(true); }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                                <button className="btn-primary w-100" style={{ padding: '8px', fontSize: '0.8rem' }} onClick={() => { setSelectedLoan(loan); setIsPaymentFormOpen(true); }}>
                                     Registrar Pago
                                 </button>
-                                <button className={`btn-secondary w-100 ${isHistoryVisible ? 'active' : ''}`} onClick={() => setViewHistory(isHistoryVisible ? null : loan.id)}>
-                                    {isHistoryVisible ? 'Cerrar Historial' : 'Ver Historial'}
+                                <button className={`btn-secondary w-100 ${isHistoryVisible ? 'active' : ''}`} style={{ padding: '8px', fontSize: '0.8rem' }} onClick={() => setViewHistory(isHistoryVisible ? null : loan.id)}>
+                                    {isHistoryVisible ? 'Cerrar Hist.' : 'Ver Historial'}
                                 </button>
                             </div>
 
                             {isHistoryVisible && (
-                                <div className="detailed-history" style={{ borderTop: '1px solid var(--accent-soft)', paddingTop: '20px', animation: 'fadeIn 0.3s ease' }}>
-                                    <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>Histórico de Pagos</h4>
+                                <div className="detailed-history" style={{ borderTop: '1px solid var(--accent-soft)', paddingTop: '12px', animation: 'fadeIn 0.3s ease' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>Histórico de Pagos</h4>
                                     <div style={{ overflowX: 'auto' }}>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
                                             <thead>
                                                 <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--accent-soft)' }}>
-                                                    <th style={{ padding: '8px' }}>Fecha</th>
-                                                    <th style={{ padding: '8px' }}>Capital</th>
-                                                    <th style={{ padding: '8px' }}>Interés</th>
-                                                    <th style={{ padding: '8px' }}>Otros</th>
-                                                    <th style={{ padding: '8px' }}>Total</th>
-                                                    <th style={{ padding: '8px' }}>Acciones</th>
+                                                    <th style={{ padding: '6px' }}>Fecha</th>
+                                                    <th style={{ padding: '6px' }}>Principal</th>
+                                                    <th style={{ padding: '6px' }}>Int.</th>
+                                                    <th style={{ padding: '6px' }}>Total</th>
+                                                    <th style={{ padding: '6px' }}>Acc.</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {summary.payments.map((p: any) => (
                                                     <tr key={p.id} style={{ borderBottom: '1px solid var(--accent-soft)' }}>
-                                                        <td style={{ padding: '12px 8px' }}>{p.payment_date}</td>
-                                                        <td style={{ padding: '12px 8px', fontWeight: 600 }}>{formatCurrency(parseFloat(p.principal))}</td>
-                                                        <td style={{ padding: '12px 8px', color: 'var(--danger)' }}>{formatCurrency(parseFloat(p.interest))}</td>
-                                                        <td style={{ padding: '12px 8px' }}>{formatCurrency(parseFloat(p.others))}</td>
-                                                        <td style={{ padding: '12px 8px', fontWeight: 700 }}>{formatCurrency(parseFloat(p.amount_paid))}</td>
-                                                        <td style={{ padding: '12px 8px' }}>
+                                                        <td style={{ padding: '6px' }}>{p.payment_date}</td>
+                                                        <td style={{ padding: '6px', fontWeight: 600 }}>{formatCurrency(parseFloat(p.principal))}</td>
+                                                        <td style={{ padding: '6px', color: 'var(--danger)' }}>{formatCurrency(parseFloat(p.interest))}</td>
+                                                        <td style={{ padding: '6px', fontWeight: 700 }}>{formatCurrency(parseFloat(p.amount_paid))}</td>
+                                                        <td style={{ padding: '6px text-center' }}>
                                                             <div style={{ display: 'flex', gap: '4px' }}>
-                                                                <button className="btn-icon" onClick={() => { setSelectedLoan(loan); setPaymentToEdit(p); setIsPaymentFormOpen(true); }} style={{ padding: '4px' }}>
-                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                                <button className="btn-icon" onClick={() => { setSelectedLoan(loan); setPaymentToEdit(p); setIsPaymentFormOpen(true); }} style={{ padding: '2px' }}>
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                                                 </button>
-                                                                <button className="btn-icon delete" onClick={() => onDeletePayment(p.id)} style={{ padding: '4px' }}>
-                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                                <button className="btn-icon delete" onClick={() => onDeletePayment(p.id)} style={{ padding: '2px' }}>
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                                                 </button>
                                                             </div>
                                                         </td>
                                                     </tr>
                                                 ))}
                                                 <tr style={{ background: 'var(--accent-soft)', fontWeight: 800 }}>
-                                                    <td style={{ padding: '12px 8px' }}>TOTALES</td>
-                                                    <td style={{ padding: '12px 8px' }}>{formatCurrency(summary.totalPrincipalPaid)}</td>
-                                                    <td style={{ padding: '12px 8px' }}>{formatCurrency(summary.totalInterestPaid)}</td>
-                                                    <td style={{ padding: '12px 8px' }}>{formatCurrency(summary.totalOthersPaid)}</td>
-                                                    <td style={{ padding: '12px 8px' }}>{formatCurrency(summary.totalAmountPaid)}</td>
+                                                    <td style={{ padding: '6px' }}>SUMA</td>
+                                                    <td style={{ padding: '6px' }}>{formatCurrency(summary.totalPrincipalPaid)}</td>
+                                                    <td style={{ padding: '6px' }}>{formatCurrency(summary.totalInterestPaid)}</td>
+                                                    <td style={{ padding: '6px' }}>{formatCurrency(summary.totalAmountPaid)}</td>
                                                     <td></td>
                                                 </tr>
                                             </tbody>

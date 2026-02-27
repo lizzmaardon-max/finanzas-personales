@@ -93,19 +93,29 @@ const Categorias: React.FC<CategoriasProps> = ({ categories, onUpdate }) => {
                 </button>
             </header>
 
-            <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
+            <div className="masonry-grid">
                 {categories.map(cat => (
-                    <section key={cat.id} className="section-card category-card">
-                        <div className="card-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span style={{ fontSize: '1.75rem' }}>{cat.icon || '📁'}</span>
+                    <section
+                        key={cat.id}
+                        className="section-card category-card"
+                        style={{
+                            background: `linear-gradient(135deg, #ffffff 0%, ${cat.color}15 100%)`,
+                            borderLeft: `5px solid ${cat.color}`,
+                            padding: '0.75rem',
+                            borderRadius: '1.25rem',
+                        }}
+                    >
+                        <div className="card-header" style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '1.1rem' }}>{cat.icon || '📁'}</span>
                                 <div className="category-tag-piquis" style={{
                                     backgroundColor: cat.color,
-                                    padding: '6px 14px',
-                                    borderRadius: '12px',
+                                    padding: '4px 10px',
+                                    borderRadius: '8px',
                                     color: '#fff',
                                     fontWeight: 700,
-                                    boxShadow: `0 4px 12px ${cat.color}44`
+                                    fontSize: '0.75rem',
+                                    boxShadow: `0 2px 8px ${cat.color}33`
                                 }}>
                                     {cat.name}
                                 </div>
@@ -128,20 +138,11 @@ const Categorias: React.FC<CategoriasProps> = ({ categories, onUpdate }) => {
 
                         <div className="subcategories-list">
                             {cat.subcategories.map((sub: string) => (
-                                <div key={sub} className="subcategory-pill-piquis" style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '6px 12px',
-                                    backgroundColor: 'var(--bg-primary)',
-                                    borderRadius: '20px',
-                                    fontSize: '0.85rem',
-                                    margin: '4px'
-                                }}>
+                                <div key={sub} className="subcategory-item-piquis">
                                     <span>{sub}</span>
                                     <button
+                                        className="btn-delete-sub"
                                         onClick={() => handleDeleteSubcategory(cat.id, sub)}
-                                        style={{ background: 'none', border: 'none', color: 'var(--text-light)', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1 }}
                                     >×</button>
                                 </div>
                             ))}
@@ -151,15 +152,17 @@ const Categorias: React.FC<CategoriasProps> = ({ categories, onUpdate }) => {
                                 style={{
                                     background: 'none',
                                     border: '1px dashed var(--accent-medium)',
-                                    borderRadius: '20px',
-                                    padding: '6px 14px',
+                                    borderRadius: '10px',
+                                    padding: '8px 12px',
                                     fontSize: '0.8rem',
                                     cursor: 'pointer',
                                     color: 'var(--text-muted)',
-                                    fontWeight: 600
+                                    fontWeight: 600,
+                                    width: '100%',
+                                    textAlign: 'left'
                                 }}
                             >
-                                + Subcategoría
+                                + Nueva subcategoría
                             </button>
                         </div>
 
