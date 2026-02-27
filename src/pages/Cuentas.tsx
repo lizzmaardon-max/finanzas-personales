@@ -266,22 +266,8 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                     </div>
                 ) : (
                     <>
-                        {/* Sección de Cuentas Normales */}
-                        <div style={{ gridColumn: '1 / -1', marginTop: '1rem', marginBottom: '0.5rem' }}>
-                            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <span style={{ fontSize: '1.5rem' }}>🏦</span> Cuentas y Efectivo
-                            </h2>
-                        </div>
-                        {accounts.filter(a => a.type !== 'Tarjeta de Crédito').length === 0 ? (
-                            <div className="empty-state-mini section-card" style={{ gridColumn: '1 / -1', padding: '2rem' }}>
-                                <p style={{ color: 'var(--text-muted)' }}>No tienes cuentas debito o efectivo registradas.</p>
-                            </div>
-                        ) : (
-                            accounts.filter(a => a.type !== 'Tarjeta de Crédito').map(a => renderAccountCard(a))
-                        )}
-
-                        {/* Sección de Tarjetas de Crédito */}
-                        <div style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        {/* Sección de Tarjetas de Crédito - AHORA PRIMERO */}
+                        <div style={{ gridColumn: '1 / -1', marginTop: '1rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontSize: '1.5rem' }}>💳</span> Tarjetas de Crédito
                             </h2>
@@ -292,24 +278,30 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                         {accounts.filter(a => a.type === 'Tarjeta de Crédito').length === 0 ? (
                             <div className="empty-state-mini section-card" style={{
                                 gridColumn: '1 / -1',
-                                padding: '3rem 2rem',
+                                padding: '2rem',
                                 textAlign: 'center',
                                 background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(130, 170, 255, 0.05) 100%)',
                                 border: '2px dashed var(--accent-soft)',
                                 borderRadius: '24px'
                             }}>
-                                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>💳</div>
-                                <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>¿No tienes tarjetas de crédito?</h3>
-                                <p style={{ color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
-                                    Agrégalas para llevar un control exacto de tus deudas y pagos mensuales.
-                                </p>
-                                <button className="btn btn-primary" onClick={() => {
-                                    setFormData({ ...formData, type: 'Tarjeta de Crédito' });
-                                    setShowForm(true);
-                                }}>Agregar mi primera tarjeta</button>
+                                <p style={{ color: 'var(--text-muted)' }}>No tienes tarjetas de crédito registradas.</p>
                             </div>
                         ) : (
                             accounts.filter(a => a.type === 'Tarjeta de Crédito').map(a => renderAccountCard(a))
+                        )}
+
+                        {/* Sección de Cuentas Normales - AHORA DESPUÉS */}
+                        <div style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem' }}>
+                            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '1.5rem' }}>🏦</span> Cuentas y Efectivo
+                            </h2>
+                        </div>
+                        {accounts.filter(a => a.type !== 'Tarjeta de Crédito').length === 0 ? (
+                            <div className="empty-state-mini section-card" style={{ gridColumn: '1 / -1', padding: '2rem' }}>
+                                <p style={{ color: 'var(--text-muted)' }}>No tienes cuentas debito o efectivo registradas.</p>
+                            </div>
+                        ) : (
+                            accounts.filter(a => a.type !== 'Tarjeta de Crédito').map(a => renderAccountCard(a))
                         )}
                     </>
                 )}
