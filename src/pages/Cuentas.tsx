@@ -25,9 +25,9 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
     const [originalInitialBalance, setOriginalInitialBalance] = useState<number | null>(null);
     const [originalCurrentBalance, setOriginalCurrentBalance] = useState<number | null>(null);
     const [expandedSections, setExpandedSections] = useState({
-        credit: true,
-        bank: true,
-        savings: true
+        credit: false,
+        bank: false,
+        savings: false
     });
     const [expandedCardId, setExpandedCardId] = useState<any>(null);
 
@@ -280,7 +280,7 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                         <div
                             className={`collapsible-header ${!expandedSections.bank ? 'is-collapsed' : ''}`}
                             onClick={() => toggleSection('bank')}
-                            style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}
+                            style={{ gridColumn: '1 / -1', marginTop: '1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '10px' }}
                         >
                             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontSize: '1.5rem' }}>🏦</span> Bancos y Efectivo
@@ -309,7 +309,7 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                         <div
                             className={`collapsible-header ${!expandedSections.savings ? 'is-collapsed' : ''}`}
                             onClick={() => toggleSection('savings')}
-                            style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}
+                            style={{ gridColumn: '1 / -1', marginTop: '1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '10px' }}
                         >
                             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontSize: '1.5rem' }}>💰</span> Mis Ahorros
