@@ -83,31 +83,6 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
     };
 
     const renderAccountCard = (a: any) => {
-        // Calculate Initial Balance by backtracking transactions
-        const currentBalanceValue = parseFloat(a.balance.toString().replace(/[^\d.-]/g, ''));
-
-        // Filter transactions for this account
-        const accountTransactions = transactions.filter(t =>
-            t.account_id === a.id ||
-            t.destination_account_id === a.id
-        );
-
-        // Calculate sum of transactions impact
-        let transactionsImpact = 0;
-        accountTransactions.forEach(t => {
-            const val = Math.abs(parseFloat(t.amount.toString().replace(/[^\d.-]/g, '')));
-            const type = t.type?.toLowerCase();
-
-            if (t.account_id === a.id) {
-                // Withdrawal or Source of Transfer
-                if (type === 'ingreso') transactionsImpact += val;
-                else transactionsImpact -= val;
-            } else if (t.destination_account_id === a.id) {
-                // Destination of Transfer
-                transactionsImpact += val;
-            }
-        });
-
         const isExpanded = expandedCardId === a.id;
 
         return (
@@ -289,7 +264,8 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                             gridColumn: '1 / -1',
                             display: 'grid',
                             gridTemplateColumns: 'inherit',
-                            gap: 'inherit'
+                            gap: 'inherit',
+                            alignItems: 'flex-start'
                         }}>
                             {accounts.filter(a => a.type === 'Tarjeta de Crédito').length === 0 ? (
                                 <div className="empty-state-mini section-card" style={{ padding: '2rem', textAlign: 'center' }}>
@@ -317,7 +293,8 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                             gridColumn: '1 / -1',
                             display: 'grid',
                             gridTemplateColumns: 'inherit',
-                            gap: 'inherit'
+                            gap: 'inherit',
+                            alignItems: 'flex-start'
                         }}>
                             {accounts.filter(a => a.type !== 'Tarjeta de Crédito' && a.type !== 'Ahorro').length === 0 ? (
                                 <div className="empty-state-mini section-card" style={{ padding: '2rem' }}>
@@ -345,7 +322,8 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                             gridColumn: '1 / -1',
                             display: 'grid',
                             gridTemplateColumns: 'inherit',
-                            gap: 'inherit'
+                            gap: 'inherit',
+                            alignItems: 'flex-start'
                         }}>
                             {accounts.filter(a => a.type === 'Ahorro').length === 0 ? (
                                 <div className="empty-state-mini section-card" style={{ padding: '2rem' }}>
