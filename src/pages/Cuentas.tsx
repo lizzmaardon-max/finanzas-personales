@@ -290,18 +290,32 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                             accounts.filter(a => a.type === 'Tarjeta de Crédito').map(a => renderAccountCard(a))
                         )}
 
-                        {/* Sección de Cuentas Normales - AHORA DESPUÉS */}
+                        {/* Sección de Cuentas y Efectivo */}
                         <div style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem' }}>
                             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <span style={{ fontSize: '1.5rem' }}>🏦</span> Cuentas y Efectivo
+                                <span style={{ fontSize: '1.5rem' }}>🏦</span> Bancos y Efectivo
                             </h2>
                         </div>
-                        {accounts.filter(a => a.type !== 'Tarjeta de Crédito').length === 0 ? (
+                        {accounts.filter(a => a.type !== 'Tarjeta de Crédito' && a.type !== 'Ahorro').length === 0 ? (
                             <div className="empty-state-mini section-card" style={{ gridColumn: '1 / -1', padding: '2rem' }}>
-                                <p style={{ color: 'var(--text-muted)' }}>No tienes cuentas debito o efectivo registradas.</p>
+                                <p style={{ color: 'var(--text-muted)' }}>No tienes cuentas bancarias o efectivo registrados.</p>
                             </div>
                         ) : (
-                            accounts.filter(a => a.type !== 'Tarjeta de Crédito').map(a => renderAccountCard(a))
+                            accounts.filter(a => a.type !== 'Tarjeta de Crédito' && a.type !== 'Ahorro').map(a => renderAccountCard(a))
+                        )}
+
+                        {/* Sección de Mis Ahorros */}
+                        <div style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem' }}>
+                            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '1.5rem' }}>💰</span> Mis Ahorros
+                            </h2>
+                        </div>
+                        {accounts.filter(a => a.type === 'Ahorro').length === 0 ? (
+                            <div className="empty-state-mini section-card" style={{ gridColumn: '1 / -1', padding: '2rem' }}>
+                                <p style={{ color: 'var(--text-muted)' }}>No tienes cuentas de ahorro registradas.</p>
+                            </div>
+                        ) : (
+                            accounts.filter(a => a.type === 'Ahorro').map(a => renderAccountCard(a))
                         )}
                     </>
                 )}
