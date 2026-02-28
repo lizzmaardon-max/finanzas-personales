@@ -595,6 +595,60 @@ body {
     max-width: 250px;
 }
 
+/* Collapsible Styles */
+.collapsible-header {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s ease;
+    padding: 10px;
+    border-radius: 12px;
+}
+
+.collapsible-header:hover {
+    background-color: var(--bg-primary);
+}
+
+.collapsible-header .chevron {
+    transition: transform 0.3s ease;
+}
+
+.collapsible-header.is-collapsed .chevron {
+    transform: rotate(-90deg);
+}
+
+.collapsible-content {
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.3s ease;
+}
+
+.collapsible-content.is-collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.account-card-expandable {
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.account-card-expandable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.account-details-transition {
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .collapsible-header h2 {
+        font-size: 1.1rem !important;
+    }
+}
+
 /* Responsive Overrides */
 @media (min-width: 400px) {
     .kpi-grid {

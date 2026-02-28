@@ -12,6 +12,7 @@ const Categorias: React.FC<CategoriasProps> = ({ categories, onUpdate }) => {
     const [showSubForm, setShowSubForm] = useState<string | null>(null);
     const [newCat, setNewCat] = useState({ name: '', color: '#f9a8a8', icon: '📁' });
     const [newSub, setNewSub] = useState('');
+    const [expandedCatId, setExpandedCatId] = useState<string | null>(null);
 
     const colors = ['#f9a8a8', '#68b6a3', '#82aaff', '#c792ea', '#ffcb6b', '#a8d8ea', '#ff9f43', '#1dd1a1', '#212529'];
     const emojis = ['📁', '👶', '🍎', '🏠', '🚗', '🏥', '🎮', '🎓', '👗', '🍽️', '🍿', '💡', '🛠️', '✈️', '🐶', '🏀', '💻', '🎁', '💰'];
@@ -105,30 +106,38 @@ const Categorias: React.FC<CategoriasProps> = ({ categories, onUpdate }) => {
                             borderRadius: '1.25rem',
                         }}
                     >
-                        <div className="card-header" style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '1.1rem' }}>{cat.icon || '📁'}</span>
+                        <div
+                            className="card-header"
+                            onClick={() => setExpandedCatId(expandedCatId === cat.id ? null : cat.id)}
+                            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{cat.icon || '📁'}</span>
                                 <div className="category-tag-piquis" style={{
                                     backgroundColor: cat.color,
                                     padding: '4px 10px',
                                     borderRadius: '8px',
                                     color: '#fff',
                                     fontWeight: 700,
-                                    fontSize: '0.75rem',
-                                    boxShadow: `0 2px 8px ${cat.color}33`
+                                    fontSize: '0.72rem',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    boxShadow: `0 2px 8px ${cat.color}33`,
+                                    maxWidth: '100px'
                                 }}>
                                     {cat.name}
                                 </div>
                             </div>
-                            <div className="card-actions">
-                                <button className="btn-icon" onClick={() => handleEditCategory(cat)}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <div className="card-actions" onClick={e => e.stopPropagation()}>
+                                <button className="btn-icon" onClick={() => handleEditCategory(cat)} style={{ padding: '4px' }}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
                                 </button>
-                                <button className="btn-icon delete" onClick={() => handleDeleteCategory(cat.id)}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <button className="btn-icon delete" onClick={() => handleDeleteCategory(cat.id)} style={{ padding: '4px' }}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <polyline points="3 6 5 6 21 6"></polyline>
                                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                     </svg>
@@ -136,34 +145,39 @@ const Categorias: React.FC<CategoriasProps> = ({ categories, onUpdate }) => {
                             </div>
                         </div>
 
-                        <div className="subcategories-list">
-                            {cat.subcategories.map((sub: string) => (
-                                <div key={sub} className="subcategory-item-piquis">
-                                    <span>{sub}</span>
-                                    <button
-                                        className="btn-delete-sub"
-                                        onClick={() => handleDeleteSubcategory(cat.id, sub)}
-                                    >×</button>
-                                </div>
-                            ))}
-                            <button
-                                className="btn-add-sub-piquis"
-                                onClick={() => setShowSubForm(cat.id)}
-                                style={{
-                                    background: 'none',
-                                    border: '1px dashed var(--accent-medium)',
-                                    borderRadius: '10px',
-                                    padding: '8px 12px',
-                                    fontSize: '0.8rem',
-                                    cursor: 'pointer',
-                                    color: 'var(--text-muted)',
-                                    fontWeight: 600,
-                                    width: '100%',
-                                    textAlign: 'left'
-                                }}
-                            >
-                                + Nueva subcategoría
-                            </button>
+                        <div className={`collapsible-content ${expandedCatId !== cat.id ? 'is-collapsed' : ''}`} style={{
+                            maxHeight: expandedCatId === cat.id ? '400px' : '0',
+                            marginTop: expandedCatId === cat.id ? '12px' : '0'
+                        }}>
+                            <div className="subcategories-list" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                {cat.subcategories.map((sub: string) => (
+                                    <div key={sub} className="subcategory-item-piquis" style={{ padding: '6px 10px', fontSize: '0.75rem' }}>
+                                        <span>{sub}</span>
+                                        <button
+                                            className="btn-delete-sub"
+                                            onClick={() => handleDeleteSubcategory(cat.id, sub)}
+                                        >×</button>
+                                    </div>
+                                ))}
+                                <button
+                                    className="btn-add-sub-piquis"
+                                    onClick={() => setShowSubForm(cat.id)}
+                                    style={{
+                                        background: 'none',
+                                        border: '1px dashed var(--accent-medium)',
+                                        borderRadius: '10px',
+                                        padding: '6px 10px',
+                                        fontSize: '0.75rem',
+                                        cursor: 'pointer',
+                                        color: 'var(--text-muted)',
+                                        fontWeight: 600,
+                                        width: '100%',
+                                        textAlign: 'left'
+                                    }}
+                                >
+                                    + Subcategoría
+                                </button>
+                            </div>
                         </div>
 
                         {showSubForm === cat.id && (

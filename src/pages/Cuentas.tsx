@@ -24,6 +24,16 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
     });
     const [originalInitialBalance, setOriginalInitialBalance] = useState<number | null>(null);
     const [originalCurrentBalance, setOriginalCurrentBalance] = useState<number | null>(null);
+    const [expandedSections, setExpandedSections] = useState({
+        credit: true,
+        bank: true,
+        savings: true
+    });
+    const [expandedCardId, setExpandedCardId] = useState<any>(null);
+
+    const toggleSection = (section: keyof typeof expandedSections) => {
+        setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+    };
 
     const colors = ['#f9a8a8', '#68b6a3', '#82aaff', '#c792ea', '#ffcb6b', '#212529', '#1dd1a1'];
 
@@ -98,13 +108,13 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
             }
         });
 
-        const initialBalanceValue = currentBalanceValue - transactionsImpact;
-        const initialBalanceStr = `$${Math.abs(initialBalanceValue).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+        const isExpanded = expandedCardId === a.id;
 
         return (
             <div
                 key={a.id}
-                className="section-card payment-card-piquis"
+                className="section-card payment-card-piquis account-card-expandable"
+                onClick={() => setExpandedCardId(isExpanded ? null : a.id)}
                 style={{
                     background: `linear-gradient(135deg, #ffffff 0%, ${a.color}15 100%)`,
                     borderLeft: `5px solid ${a.color}`,
@@ -113,93 +123,86 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '0.25rem',
-                    minHeight: '130px'
+                    minHeight: isExpanded ? '140px' : 'auto'
                 }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                        <span style={{
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            backgroundColor: `${a.color}22`,
-                            color: a.color,
-                            fontSize: '0.6rem',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            display: 'inline-block'
-                        }}>{a.type}</span>
-                        <h3 style={{ marginTop: '0.2rem', fontWeight: 800, fontSize: '0.95rem', marginBottom: '0px', lineHeight: 1.2 }}>{a.name}</h3>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{a.bank || 'Efectivo'}</p>
+                    <div style={{ flex: 1 }}>
+                        <h3 style={{ fontWeight: 800, fontSize: '0.9rem', marginBottom: '0px', lineHeight: 1.2 }}>{a.name}</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{a.bank || 'Efectivo'}</span>
+                            {a.last4 && (
+                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>• {a.last4}</span>
+                            )}
+                        </div>
                     </div>
                     <div className="card-actions" style={{ display: 'flex', gap: '4px' }}>
-                        <button className="btn-icon" onClick={() => handleEdit(a)} style={{ padding: '4px' }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <button className="btn-icon" onClick={(e) => { e.stopPropagation(); handleEdit(a); }} style={{ padding: '4px' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                        </button>
-                        <button className="btn-icon delete" onClick={() => onDelete(a.id)} style={{ padding: '4px' }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                             </svg>
                         </button>
                     </div>
                 </div>
 
-                {a.last4 && (
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
-                        •••• {a.last4}
-                    </div>
-                )}
-
-                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed rgba(0,0,0,0.05)', paddingTop: '4px' }}>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>Saldo Inicial</span>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-main)' }}>{initialBalanceStr}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>Saldo Actual</span>
-                        <span style={{
-                            fontSize: '1.05rem',
-                            fontWeight: 900,
-                            color: a.balance.toString().startsWith('-') ? 'var(--negative)' : 'var(--positive)'
-                        }}>
-                            {a.balance}
-                        </span>
-                    </div>
-                    {Number(a.credit_limit) > 0 && (
-                        <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', marginTop: '4px', paddingTop: '4px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-                                <span style={{ color: 'var(--text-muted)' }}>Límite</span>
-                                <span style={{ fontWeight: 600 }}>${Number(a.credit_limit).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            {/* Tasa Cero integration */}
-                            {(() => {
-                                const relatedPlans = (installmentPlans || []).filter(p => p.account_id === a.id && p.is_active);
-                                const totalTasaCeroDebt = relatedPlans.reduce((sum, p) => sum + (parseFloat(p.remaining_amount) || 0), 0);
-                                if (totalTasaCeroDebt <= 0) return null;
-                                return (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--accent-primary)', marginTop: '2px' }}>
-                                        <span>Tasa Cero pend.</span>
-                                        <span style={{ fontWeight: 700 }}>-${totalTasaCeroDebt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                                    </div>
-                                );
-                            })()}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '2px' }}>
-                                <span style={{ color: 'var(--text-muted)' }}>Disponible</span>
-                                <span style={{ fontWeight: 700, color: 'var(--positive)' }}>
-                                    {(() => {
-                                        const relatedPlans = (installmentPlans || []).filter(p => p.account_id === a.id && p.is_active);
-                                        const totalTasaCeroDebt = relatedPlans.reduce((sum, p) => sum + (parseFloat(p.remaining_amount) || 0), 0);
-                                        const currentBalance = parseFloat(a.balance.toString().replace(/[^\d.-]/g, ''));
-                                        const available = Math.max(0, Number(a.credit_limit) + currentBalance - totalTasaCeroDebt);
-                                        return `$${available.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-                                    })()}
-                                </span>
-                            </div>
+                <div className={`account-details-transition ${isExpanded ? 'is-expanded' : ''}`} style={{
+                    maxHeight: isExpanded ? '200px' : '0',
+                    opacity: isExpanded ? 1 : 0,
+                    marginTop: isExpanded ? '8px' : '0'
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed rgba(0,0,0,0.05)', paddingTop: '4px' }}>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>Saldo Actual</span>
+                            <span style={{
+                                fontSize: '0.95rem',
+                                fontWeight: 900,
+                                color: a.balance.toString().startsWith('-') ? 'var(--negative)' : 'var(--positive)'
+                            }}>
+                                {a.balance}
+                            </span>
                         </div>
-                    )}
+
+                        {Number(a.credit_limit) > 0 && (
+                            <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', marginTop: '4px', paddingTop: '4px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem' }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>Límite</span>
+                                    <span style={{ fontWeight: 600 }}>${Number(a.credit_limit).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                {(() => {
+                                    const relatedPlans = (installmentPlans || []).filter(p => p.account_id === a.id && p.is_active);
+                                    const totalTasaCeroDebt = relatedPlans.reduce((sum, p) => sum + (parseFloat(p.remaining_amount) || 0), 0);
+                                    if (totalTasaCeroDebt <= 0) return null;
+                                    return (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--accent-primary)', marginTop: '2px' }}>
+                                            <span>Tasa Cero pend.</span>
+                                            <span style={{ fontWeight: 700 }}>-${totalTasaCeroDebt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                        </div>
+                                    );
+                                })()}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '2px' }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>Disponible</span>
+                                    <span style={{ fontWeight: 800, color: 'var(--positive)' }}>
+                                        {(() => {
+                                            const relatedPlans = (installmentPlans || []).filter(p => p.account_id === a.id && p.is_active);
+                                            const totalTasaCeroDebt = relatedPlans.reduce((sum, p) => sum + (parseFloat(p.remaining_amount) || 0), 0);
+                                            const currentBalance = parseFloat(a.balance.toString().replace(/[^\d.-]/g, ''));
+                                            const available = Math.max(0, Number(a.credit_limit) + currentBalance - totalTasaCeroDebt);
+                                            return `$${available.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                                        })()}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                            <button className="btn-icon delete" onClick={(e) => { e.stopPropagation(); onDelete(a.id); }} style={{ padding: '4px' }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -266,57 +269,92 @@ const Cuentas: React.FC<CuentasProps> = ({ accounts, transactions, installmentPl
                     </div>
                 ) : (
                     <>
-                        {/* Sección de Tarjetas de Crédito - AHORA PRIMERO */}
-                        <div style={{ gridColumn: '1 / -1', marginTop: '1rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        {/* Sección de Tarjetas de Crédito */}
+                        <div
+                            className={`collapsible-header ${!expandedSections.credit ? 'is-collapsed' : ''}`}
+                            onClick={() => toggleSection('credit')}
+                            style={{ gridColumn: '1 / -1', marginTop: '1rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        >
                             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontSize: '1.5rem' }}>💳</span> Tarjetas de Crédito
+                                <svg className="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', opacity: 0.5 }}>
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
                             </h2>
                             {accounts.filter(a => a.type === 'Tarjeta de Crédito').length > 0 && (
-                                <span className="badge-quote" style={{ margin: 0 }}>Estas tarjetas descuentan de tu patrimonio</span>
+                                <span className="badge-quote" style={{ margin: 0 }}>Descuentan patrimonio</span>
                             )}
                         </div>
-                        {accounts.filter(a => a.type === 'Tarjeta de Crédito').length === 0 ? (
-                            <div className="empty-state-mini section-card" style={{
-                                gridColumn: '1 / -1',
-                                padding: '2rem',
-                                textAlign: 'center',
-                                background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(130, 170, 255, 0.05) 100%)',
-                                border: '2px dashed var(--accent-soft)',
-                                borderRadius: '24px'
-                            }}>
-                                <p style={{ color: 'var(--text-muted)' }}>No tienes tarjetas de crédito registradas.</p>
-                            </div>
-                        ) : (
-                            accounts.filter(a => a.type === 'Tarjeta de Crédito').map(a => renderAccountCard(a))
-                        )}
+                        <div className={`collapsible-content ${!expandedSections.credit ? 'is-collapsed' : ''}`} style={{
+                            gridColumn: '1 / -1',
+                            display: 'grid',
+                            gridTemplateColumns: 'inherit',
+                            gap: 'inherit'
+                        }}>
+                            {accounts.filter(a => a.type === 'Tarjeta de Crédito').length === 0 ? (
+                                <div className="empty-state-mini section-card" style={{ padding: '2rem', textAlign: 'center' }}>
+                                    <p style={{ color: 'var(--text-muted)' }}>No tienes tarjetas registradas.</p>
+                                </div>
+                            ) : (
+                                accounts.filter(a => a.type === 'Tarjeta de Crédito').map(a => renderAccountCard(a))
+                            )}
+                        </div>
 
                         {/* Sección de Cuentas y Efectivo */}
-                        <div style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem' }}>
+                        <div
+                            className={`collapsible-header ${!expandedSections.bank ? 'is-collapsed' : ''}`}
+                            onClick={() => toggleSection('bank')}
+                            style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}
+                        >
                             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontSize: '1.5rem' }}>🏦</span> Bancos y Efectivo
+                                <svg className="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', opacity: 0.5 }}>
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
                             </h2>
                         </div>
-                        {accounts.filter(a => a.type !== 'Tarjeta de Crédito' && a.type !== 'Ahorro').length === 0 ? (
-                            <div className="empty-state-mini section-card" style={{ gridColumn: '1 / -1', padding: '2rem' }}>
-                                <p style={{ color: 'var(--text-muted)' }}>No tienes cuentas bancarias o efectivo registrados.</p>
-                            </div>
-                        ) : (
-                            accounts.filter(a => a.type !== 'Tarjeta de Crédito' && a.type !== 'Ahorro').map(a => renderAccountCard(a))
-                        )}
+                        <div className={`collapsible-content ${!expandedSections.bank ? 'is-collapsed' : ''}`} style={{
+                            gridColumn: '1 / -1',
+                            display: 'grid',
+                            gridTemplateColumns: 'inherit',
+                            gap: 'inherit'
+                        }}>
+                            {accounts.filter(a => a.type !== 'Tarjeta de Crédito' && a.type !== 'Ahorro').length === 0 ? (
+                                <div className="empty-state-mini section-card" style={{ padding: '2rem' }}>
+                                    <p style={{ color: 'var(--text-muted)' }}>No tienes cuentas bancarias registradas.</p>
+                                </div>
+                            ) : (
+                                accounts.filter(a => a.type !== 'Tarjeta de Crédito' && a.type !== 'Ahorro').map(a => renderAccountCard(a))
+                            )}
+                        </div>
 
                         {/* Sección de Mis Ahorros */}
-                        <div style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem' }}>
+                        <div
+                            className={`collapsible-header ${!expandedSections.savings ? 'is-collapsed' : ''}`}
+                            onClick={() => toggleSection('savings')}
+                            style={{ gridColumn: '1 / -1', marginTop: '2.5rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}
+                        >
                             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontSize: '1.5rem' }}>💰</span> Mis Ahorros
+                                <svg className="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', opacity: 0.5 }}>
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
                             </h2>
                         </div>
-                        {accounts.filter(a => a.type === 'Ahorro').length === 0 ? (
-                            <div className="empty-state-mini section-card" style={{ gridColumn: '1 / -1', padding: '2rem' }}>
-                                <p style={{ color: 'var(--text-muted)' }}>No tienes cuentas de ahorro registradas.</p>
-                            </div>
-                        ) : (
-                            accounts.filter(a => a.type === 'Ahorro').map(a => renderAccountCard(a))
-                        )}
+                        <div className={`collapsible-content ${!expandedSections.savings ? 'is-collapsed' : ''}`} style={{
+                            gridColumn: '1 / -1',
+                            display: 'grid',
+                            gridTemplateColumns: 'inherit',
+                            gap: 'inherit'
+                        }}>
+                            {accounts.filter(a => a.type === 'Ahorro').length === 0 ? (
+                                <div className="empty-state-mini section-card" style={{ padding: '2rem' }}>
+                                    <p style={{ color: 'var(--text-muted)' }}>No tienes cuentas de ahorro registradas.</p>
+                                </div>
+                            ) : (
+                                accounts.filter(a => a.type === 'Ahorro').map(a => renderAccountCard(a))
+                            )}
+                        </div>
                     </>
                 )}
             </div>
